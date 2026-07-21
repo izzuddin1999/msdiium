@@ -1,0 +1,996 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PolicyDocument;
+use App\Models\DocumentAttachment;
+use App\Models\DocumentHistory;
+use App\Models\LookupValue;
+use App\Models\TopicCategory;
+use App\Models\TopicSubtopic;
+use App\Models\TopicDetail;
+use App\Models\User;
+use App\Models\FormTemplate;
+use App\Models\DocumentFormResponse;
+use App\Notifications\CircularPublishedNotification;
+use App\Notifications\DocumentPublishedNotification;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+
+class PolicyDocumentController extends Controller
+{
+    private const STATUS_TRANSITIONS = [
+        'draft' => ['draft', 'published', 'superseded', 'archived'],
+        'published' => ['published', 'inactive', 'superseded', 'archived'],
+        'inactive' => ['inactive', 'published', 'superseded', 'archived'],
+        'superseded' => ['superseded', 'archived'],
+        'archived' => ['archived'],
+    ];
+
+    public function index(Request $request): View
+    {
+        $viewer = $request->user();
+        $canManageDocuments = $this->canManageDocuments($viewer);
+        $latestInFamily = function ($query) use ($canManageDocuments): void {
+            $query->whereNotExists(function ($newer) use ($canManageDocuments): void {
+                $newer->selectRaw('1')
+                    ->from('policy_documents as newer')
+                    ->whereRaw('COALESCE(newer.parent_document_id, newer.id) = COALESCE(policy_documents.parent_document_id, policy_documents.id)')
+                    ->whereColumn('newer.version_number', '>', 'policy_documents.version_number');
+
+                if (! $canManageDocuments) {
+                    $newer->where('newer.status', 'published');
+                }
+            });
+        };
+        $query = PolicyDocument::with(['creator', 'subtopic.mainTopic', 'formResponses.template'])
+            ->visibleTo($viewer)
+            ->tap($latestInFamily)
+            ->latest();
+        $visibleDocuments = PolicyDocument::query()->visibleTo($viewer)->tap($latestInFamily);
+        $repositoryStats = [
+            'total' => (clone $visibleDocuments)->count(),
+            'published' => (clone $visibleDocuments)->where('status', 'published')->count(),
+            'draft' => (clone $visibleDocuments)->where('status', 'draft')->count(),
+            'expiring' => (clone $visibleDocuments)->whereNotNull('expiry_date')->whereBetween('expiry_date', [today(), today()->addDays(30)])->count(),
+        ];
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+
+        if ($request->filled('document_type')) {
+            $query->where('document_type', $request->string('document_type'));
+        }
+
+        if ($request->filled('topic_category')) {
+            $query->where('topic_category', $request->string('topic_category'));
+        }
+
+        if ($request->filled('subtopic_id')) {
+            $query->where('subtopic_id', (int) $request->input('subtopic_id'));
+        }
+
+        if ($request->filled('q')) {
+            $search = '%' . $request->string('q') . '%';
+            $query->where(function ($builder) use ($search): void {
+                $builder->where('title', 'like', $search)
+                    ->orWhere('reference_number', 'like', $search);
+            });
+        }
+
+        if (config('features.form_builder') && $request->filled('form_template_id')) {
+            $query->whereHas('formResponses', fn ($builder) => $builder->where('form_template_id', (int) $request->input('form_template_id')));
+        }
+
+        $documents = $this->decoratePaginator($query->paginate(12)->withQueryString());
+        $this->attachVersionFamilies($documents->getCollection(), $viewer);
+
+        return view('policy_documents.index', [
+            'documents' => $documents,
+            'canManageDocuments' => $canManageDocuments,
+            'viewer' => $viewer,
+            'topicCategories' => $this->topicCategoryOptions(),
+            'subtopics' => $this->subtopicOptions(),
+            'documentTypes' => $this->lookupOptions('DOCUMENT_TYPE', ['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular']),
+            'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
+            'repositoryStats' => $repositoryStats,
+            'formTemplates' => config('features.form_builder') ? FormTemplate::where('is_active', true)->orderBy('name')->get(['id', 'name']) : collect(),
+        ]);
+    }
+
+    public function create(Request $request): View
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+
+        $lookupTerm = trim((string) $request->input('title_lookup', old('title', '')));
+
+        return view('policy_documents.create', [
+            'users' => $this->editableCreators(),
+            'document' => new PolicyDocument(),
+            'lookupTerm' => $lookupTerm,
+            'matchingDocuments' => $this->findHistoricalRecords($viewer, $lookupTerm),
+            'topicCategories' => $this->topicCategoryOptions(),
+            'subtopics' => $this->subtopicOptions(),
+            'topicDetails' => $this->topicDetailOptions(),
+            'documentTypes' => $this->lookupOptions('DOCUMENT_TYPE', ['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular']),
+            'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
+            'formTemplates' => $this->availableFormTemplates($viewer),
+            'rootDocuments' => PolicyDocument::query()->visibleTo($viewer)->whereNull('parent_document_id')->orderBy('title')->get(['id', 'title', 'reference_number', 'version_number', 'status']),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+
+        $submittedTitle = trim((string) $request->input('title'));
+        $exists = $submittedTitle !== '' && PolicyDocument::where('title', $submittedTitle)
+            ->whereNull('parent_document_id')
+            ->exists();
+
+        if ($exists) {
+            return redirect()
+                ->route('policy-documents.create', ['title_lookup' => $submittedTitle])
+                ->withInput()
+                ->withErrors([
+                    'title' => 'A root document with this title already exists. Use "Create New Version" from the existing record.',
+                ]);
+        }
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'reference_number' => ['nullable', 'string', 'max:100', 'unique:policy_documents,reference_number'],
+            'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
+            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
+            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'content' => ['required', 'string'],
+            'revision_summary' => ['nullable', 'string', 'max:1000'],
+            'effective_date' => ['nullable', 'date'],
+            'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
+            'remarks' => ['nullable', 'string', 'max:2000'],
+            'access_scope' => ['required', 'in:all,kcdiom,msd'],
+            'public_flag' => ['nullable', 'boolean'],
+            'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
+            'is_circular' => ['nullable', 'boolean'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
+            'files' => ['nullable', 'array', 'max:10'],
+            'files.*' => ['file', 'mimes:pdf', 'max:3072'],
+            'form_template_id' => [Rule::prohibitedIf(! config('features.form_builder')), 'nullable', 'integer', 'exists:form_templates,id'],
+        ]);
+
+        [$template, $dynamicValues] = $this->validateDynamicForm($request, $viewer, $data['form_template_id'] ?? null);
+        unset($data['form_template_id']);
+
+        // Governance ownership is derived from the authenticated manager rather
+        // than being manually selected during document registration.
+        $data['owner_unit'] = $viewer?->isKcdiomLiaison() ? 'kcdiom' : 'msd';
+        $data['owner_report'] = null;
+        $data['created_by'] = $viewer?->id;
+
+        $this->ensureOwnerUnitAccess($viewer, $data['owner_unit']);
+        $this->ensureSubtopicMatchesMainTopic($data['topic_category'] ?? null, $data['subtopic_id'] ?? null);
+        $this->ensureTopicDetailMatchesMainTopic($data['subtopic_id'] ?? null, $data['topic_detail_id'] ?? null);
+
+        $uploadedFiles = $this->storePdfUploads($request);
+        if ($uploadedFiles !== []) {
+            $data['file_path'] = $uploadedFiles[0]['path'];
+            $data['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
+        }
+
+        $data['is_circular'] = (bool) ($data['is_circular'] ?? false);
+        $data['public_flag'] = (bool) ($data['public_flag'] ?? $data['access_scope'] === 'all');
+        $data['version_number'] = 1;
+        $data['published_at'] = $data['status'] === 'published' ? now() : null;
+        $data['published_by'] = $data['status'] === 'published' ? $viewer?->id : null;
+
+        $document = PolicyDocument::create($data);
+        if ($template) {
+            DocumentFormResponse::create(['policy_document_id' => $document->id, 'form_template_id' => $template->id, 'values' => $dynamicValues, 'submitted_by' => $viewer?->id]);
+        }
+        $this->recordAttachments($document, $uploadedFiles);
+
+        return redirect()->route('policy-documents.index')->with('status', 'Policy/Circular record created successfully.');
+    }
+
+    public function show(PolicyDocument $policyDocument): View
+    {
+        $viewer = request()->user();
+
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+
+        $rootDocumentId = $policyDocument->parent_document_id ?: $policyDocument->id;
+        $versions = PolicyDocument::with(['creator', 'publisher'])
+            ->where(function ($query) use ($rootDocumentId): void {
+                $query->where('id', $rootDocumentId)
+                    ->orWhere('parent_document_id', $rootDocumentId);
+            })
+            ->visibleTo($viewer)
+            ->orderByDesc('version_number')
+            ->get();
+
+        $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
+        $policyDocument->load(['creator', 'publisher', 'updater', 'subtopic.mainTopic', 'activityLogs.user', 'formResponses.template.fields']);
+        $currentHistory = DocumentHistory::query()
+            ->where('policy_document_id', $rootId)
+            ->where('version_number', $policyDocument->version_number)
+            ->first();
+        $currentAttachments = DocumentAttachment::with(['uploader', 'history'])
+            ->where('policy_document_id', $rootId)
+            ->when($currentHistory, fn ($query) => $query->where('document_history_id', $currentHistory->id))
+            ->orderBy('id')
+            ->get();
+        $versions = $this->decorateCollection($versions);
+        $policyDocument = $this->decorateDocument($policyDocument);
+
+        return view('policy_documents.show', [
+            'document' => $policyDocument,
+            'versions' => $versions,
+            'users' => $this->editableCreators(),
+            'canManageDocuments' => $this->canManageDocuments($viewer),
+            'canPublishDocument' => $this->canPublishDocument($viewer, $policyDocument),
+            'topicCategories' => $this->topicCategoryOptions(),
+            'subtopics' => $this->subtopicOptions(),
+            'normalizedHistories' => DocumentHistory::with(['creator', 'attachments'])->where('policy_document_id', $rootId)->orderByDesc('version_number')->get(),
+            'normalizedAttachments' => DocumentAttachment::with(['uploader', 'history'])->where('policy_document_id', $rootId)->latest()->get(),
+            'currentAttachments' => $currentAttachments,
+            'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
+        ]);
+    }
+
+    public function download(PolicyDocument $policyDocument)
+    {
+        $viewer = request()->user();
+
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+        abort_unless($policyDocument->file_path, 404);
+        abort_unless(Storage::disk('public')->exists($policyDocument->file_path), 404);
+
+        return Storage::disk('public')->download(
+            $policyDocument->file_path,
+            $policyDocument->file_original_name ?: basename($policyDocument->file_path)
+        );
+    }
+
+    public function preview(PolicyDocument $policyDocument)
+    {
+        $viewer = request()->user();
+
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+        abort_unless($policyDocument->file_path, 404);
+        abort_unless(Storage::disk('public')->exists($policyDocument->file_path), 404);
+
+        $fileName = $policyDocument->file_original_name ?: basename($policyDocument->file_path);
+        abort_unless(strtolower(pathinfo($fileName, PATHINFO_EXTENSION)) === 'pdf', 415, 'Only PDF documents can be previewed.');
+
+        return Storage::disk('public')->response(
+            $policyDocument->file_path,
+            $fileName,
+            ['Content-Type' => 'application/pdf'],
+            'inline'
+        );
+    }
+
+    public function downloadAttachment(DocumentAttachment $documentAttachment)
+    {
+        $viewer = request()->user();
+        $document = PolicyDocument::findOrFail($documentAttachment->policy_document_id);
+        $documentAttachment->loadMissing('history');
+
+        abort_unless($this->canViewDocument($viewer, $document), 404);
+        if (! ($viewer?->canManagePolicies() ?? false) && $documentAttachment->history) {
+            abort_unless($documentAttachment->history->status === 'published', 404);
+        }
+        abort_unless(Storage::disk('public')->exists($documentAttachment->file_path), 404);
+
+        if ($documentAttachment->checksum_sha256) {
+            $actualChecksum = hash('sha256', Storage::disk('public')->get($documentAttachment->file_path));
+            abort_unless(hash_equals($documentAttachment->checksum_sha256, $actualChecksum), 409, 'Attachment integrity verification failed.');
+            $documentAttachment->forceFill(['integrity_verified_at' => now()])->saveQuietly();
+        }
+
+        return Storage::disk('public')->download(
+            $documentAttachment->file_path,
+            $documentAttachment->file_name
+        );
+    }
+
+    public function previewAttachment(DocumentAttachment $documentAttachment)
+    {
+        $viewer = request()->user();
+        $document = PolicyDocument::findOrFail($documentAttachment->policy_document_id);
+        $documentAttachment->loadMissing('history');
+
+        abort_unless($this->canViewDocument($viewer, $document), 404);
+        if (! ($viewer?->canManagePolicies() ?? false) && $documentAttachment->history) {
+            abort_unless($documentAttachment->history->status === 'published', 404);
+        }
+        abort_unless(strtolower(pathinfo($documentAttachment->file_name, PATHINFO_EXTENSION)) === 'pdf', 415, 'Only PDF documents can be previewed.');
+        abort_unless(Storage::disk('public')->exists($documentAttachment->file_path), 404);
+
+        return Storage::disk('public')->response(
+            $documentAttachment->file_path,
+            $documentAttachment->file_name,
+            ['Content-Type' => 'application/pdf'],
+            'inline'
+        );
+    }
+
+    public function destroyAttachment(Request $request, DocumentAttachment $documentAttachment): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+        $rootDocument = PolicyDocument::findOrFail($documentAttachment->policy_document_id);
+        abort_unless($this->canViewDocument($viewer, $rootDocument), 404);
+
+        $documentAttachment->loadMissing('history');
+        abort_unless($documentAttachment->history && $documentAttachment->history->status === 'draft', 409, 'Files from an active or superceded version are protected. Create a new version to exclude them.');
+
+        $versionDocument = PolicyDocument::query()
+            ->where(function ($query) use ($rootDocument): void {
+                $query->whereKey($rootDocument->id)->orWhere('parent_document_id', $rootDocument->id);
+            })
+            ->where('version_number', $documentAttachment->history->version_number)
+            ->first();
+        $path = $documentAttachment->file_path;
+        $name = $documentAttachment->file_name;
+        $historyId = $documentAttachment->document_history_id;
+        $documentAttachment->delete();
+
+        if ($versionDocument && $versionDocument->file_path === $path) {
+            $replacement = DocumentAttachment::query()->where('document_history_id', $historyId)->orderBy('id')->first();
+            $versionDocument->update([
+                'file_path' => $replacement?->file_path,
+                'file_original_name' => $replacement?->file_name,
+                'updated_by' => $viewer?->id,
+            ]);
+        }
+
+        $stillReferenced = DocumentAttachment::query()->where('file_path', $path)->exists()
+            || PolicyDocument::query()->where('file_path', $path)->exists();
+        if (! $stillReferenced) {
+            Storage::disk('public')->delete($path);
+        }
+
+        return back()->with('status', 'PDF “'.$name.'” deleted from this draft version.');
+    }
+
+    public function publish(Request $request, PolicyDocument $policyDocument): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+        $this->ensureValidStatusTransition($policyDocument->status, 'published');
+
+        $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
+        PolicyDocument::query()
+            ->where(function ($query) use ($rootId): void {
+                $query->whereKey($rootId)->orWhere('parent_document_id', $rootId);
+            })
+            ->where('id', '!=', $policyDocument->id)
+            ->where('status', 'published')
+            ->get()
+            ->each(fn (PolicyDocument $version) => $version->update([
+                'status' => 'superseded',
+                'updated_by' => $viewer?->id,
+            ]));
+
+        $policyDocument->update([
+            'status' => 'published',
+            'published_at' => now(),
+            'published_by' => $viewer?->id,
+            'updated_by' => $viewer?->id,
+        ]);
+
+        $this->notifyPublishedDocumentRecipients($policyDocument, $viewer?->id);
+
+        $message = $policyDocument->is_circular
+            ? 'Circular published and marked for Staff/Public circulation.'
+            : 'Document published successfully.';
+
+        return redirect()->route('policy-documents.show', $policyDocument)->with('status', $message);
+    }
+
+    public function edit(Request $request, PolicyDocument $policyDocument): View
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+
+        return view('policy_documents.edit', [
+            'document' => $policyDocument,
+            'users' => $this->editableCreators(),
+            'topicCategories' => $this->topicCategoryOptions(),
+            'subtopics' => $this->subtopicOptions(),
+            'topicDetails' => $this->topicDetailOptions(),
+            'documentTypes' => $this->lookupOptions('DOCUMENT_TYPE', ['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular']),
+            'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
+        ]);
+    }
+
+    public function update(Request $request, PolicyDocument $policyDocument): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'reference_number' => ['nullable', 'string', 'max:100', Rule::unique('policy_documents', 'reference_number')->ignore($policyDocument)],
+            'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
+            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
+            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'content' => ['required', 'string'],
+            'revision_summary' => ['nullable', 'string', 'max:1000'],
+            'effective_date' => ['nullable', 'date'],
+            'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
+            'remarks' => ['nullable', 'string', 'max:2000'],
+            'access_scope' => ['required', 'in:all,kcdiom,msd'],
+            'public_flag' => ['nullable', 'boolean'],
+            'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
+            'is_circular' => ['nullable', 'boolean'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
+            'files' => ['nullable', 'array', 'max:10'],
+            'files.*' => ['file', 'mimes:pdf', 'max:3072'],
+        ]);
+
+        $this->ensureOwnerUnitAccess($viewer, $policyDocument->owner_unit);
+        $this->ensureSubtopicMatchesMainTopic($data['topic_category'] ?? null, $data['subtopic_id'] ?? null);
+        $this->ensureTopicDetailMatchesMainTopic($data['subtopic_id'] ?? null, $data['topic_detail_id'] ?? null);
+        $this->ensureValidStatusTransition($policyDocument->status, $data['status']);
+
+        $uploadedFiles = $this->storePdfUploads($request);
+        if ($uploadedFiles !== []) {
+            $data['file_path'] = $uploadedFiles[0]['path'];
+            $data['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
+        }
+
+        $data['is_circular'] = (bool) ($data['is_circular'] ?? false);
+        $data['public_flag'] = (bool) ($data['public_flag'] ?? $data['access_scope'] === 'all');
+        $data['updated_by'] = $viewer?->id;
+        $data['published_at'] = $data['status'] === 'published' ? ($policyDocument->published_at ?? now()) : null;
+        $data['published_by'] = $data['status'] === 'published' ? ($policyDocument->published_by ?? $viewer?->id) : null;
+
+        $policyDocument->update($data);
+        $this->recordAttachments($policyDocument, $uploadedFiles);
+
+        return redirect()->route('policy-documents.show', $policyDocument)->with('status', 'Record updated successfully.');
+    }
+
+    public function destroy(Request $request, PolicyDocument $policyDocument): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+
+        if ($policyDocument->versions()->exists()) {
+            return redirect()->route('policy-documents.show', $policyDocument)->withErrors([
+                'document' => 'Delete the newer versions before deleting this original record.',
+            ]);
+        }
+
+        $paths = $policyDocument->attachments()->pluck('file_path')
+            ->push($policyDocument->file_path)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $title = $policyDocument->title;
+        $policyDocument->delete();
+
+        if ($paths !== []) {
+            Storage::disk('public')->delete($paths);
+        }
+
+        return redirect()->route('policy-documents.index')->with('status', 'Document “'.$title.'” deleted successfully.');
+    }
+
+    public function storeVersion(Request $request, PolicyDocument $policyDocument): RedirectResponse
+    {
+        $viewer = $request->user();
+        $this->ensureCanManageDocuments($viewer);
+        abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+
+        $data = $request->validate([
+            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
+            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'content' => ['nullable', 'string'],
+            'revision_summary' => ['nullable', 'string', 'max:1000'],
+            'effective_date' => ['nullable', 'date'],
+            'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
+            'remarks' => ['nullable', 'string', 'max:2000'],
+            'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
+            'is_circular' => ['nullable', 'boolean'],
+            'created_by' => $this->creatorValidationRules(),
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
+            'files' => ['nullable', 'array', 'max:10'],
+            'files.*' => ['file', 'mimes:pdf', 'max:3072'],
+            'attachments_reviewed' => ['nullable', 'boolean'],
+            'retain_attachment_ids' => ['nullable', 'array'],
+            'retain_attachment_ids.*' => ['integer'],
+        ]);
+
+        $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
+        $selectedMainTopic = $data['topic_category'] ?? $policyDocument->topic_category;
+        $selectedSubtopic = $data['subtopic_id'] ?? $policyDocument->subtopic_id;
+        $this->ensureSubtopicMatchesMainTopic($selectedMainTopic, $selectedSubtopic);
+
+        $latestVersion = PolicyDocument::where(function ($q) use ($rootId): void {
+            $q->where('id', $rootId)->orWhere('parent_document_id', $rootId);
+        })->max('version_number');
+
+        $sourceHistory = DocumentHistory::query()
+            ->where('policy_document_id', $rootId)
+            ->where('version_number', $policyDocument->version_number)
+            ->first();
+        $availableAttachments = DocumentAttachment::query()
+            ->where('policy_document_id', $rootId)
+            ->when($sourceHistory, fn ($query) => $query->where('document_history_id', $sourceHistory->id))
+            ->orderBy('id')
+            ->get();
+        $selectedAttachmentIds = collect($data['retain_attachment_ids'] ?? [])->map(fn ($id) => (int) $id);
+        $retainedAttachments = $request->boolean('attachments_reviewed')
+            ? $availableAttachments->whereIn('id', $selectedAttachmentIds)->values()
+            : $availableAttachments;
+
+        $newVersionData = [
+            'title' => $policyDocument->title,
+            'document_type' => $policyDocument->document_type,
+            'topic_category' => $selectedMainTopic,
+            'subtopic_id' => $selectedSubtopic,
+            'topic_detail_id' => $policyDocument->topic_detail_id,
+            'content' => $data['content'] ?? $policyDocument->content,
+            'revision_summary' => $data['revision_summary'] ?? null,
+            'reference_number' => null,
+            'effective_date' => $data['effective_date'] ?? $policyDocument->effective_date,
+            'expiry_date' => $data['expiry_date'] ?? $policyDocument->expiry_date,
+            'remarks' => $data['remarks'] ?? $policyDocument->remarks,
+            'access_scope' => $policyDocument->access_scope,
+            'public_flag' => $policyDocument->public_flag,
+            'owner_unit' => $policyDocument->owner_unit,
+            'owner_report' => $policyDocument->owner_report,
+            'status' => $data['status'],
+            'is_circular' => (bool) ($data['is_circular'] ?? $policyDocument->is_circular),
+            'version_number' => ($latestVersion ?? 1) + 1,
+            'parent_document_id' => $rootId,
+            'created_by' => $data['created_by'] ?? $policyDocument->created_by,
+            'published_at' => $data['status'] === 'published' ? now() : null,
+            'published_by' => $data['status'] === 'published' ? $viewer?->id : null,
+        ];
+
+        $uploadedFiles = $this->storePdfUploads($request);
+        if ($uploadedFiles !== []) {
+            $newVersionData['file_path'] = $uploadedFiles[0]['path'];
+            $newVersionData['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
+        } elseif ($retainedAttachments->isNotEmpty()) {
+            $newVersionData['file_path'] = $retainedAttachments->first()->file_path;
+            $newVersionData['file_original_name'] = $retainedAttachments->first()->file_name;
+        } elseif ($request->boolean('attachments_reviewed')) {
+            $newVersionData['file_path'] = null;
+            $newVersionData['file_original_name'] = null;
+        } else {
+            $newVersionData['file_path'] = $policyDocument->file_path;
+            $newVersionData['file_original_name'] = $policyDocument->file_original_name;
+        }
+
+        $newVersion = PolicyDocument::create($newVersionData);
+        $this->copyAttachmentsToVersion($newVersion, $retainedAttachments);
+        $this->recordAttachments($newVersion, $uploadedFiles);
+
+        return redirect()->route('policy-documents.show', $policyDocument)->with('status', 'New version created successfully.');
+    }
+
+    public function reportCirculars(): View
+    {
+        $viewer = request()->user();
+
+        return view('policy_documents.report_circulars', [
+            'documents' => $this->decorateCollection(
+                PolicyDocument::with('publisher')->where('document_type', 'circular')->visibleTo($viewer)->latest()->get()
+            ),
+        ]);
+    }
+
+    public function reportVersions(): View
+    {
+        $viewer = request()->user();
+        $documents = $this->decorateCollection(
+            PolicyDocument::with('publisher')->visibleTo($viewer)->orderBy('title')->orderByDesc('version_number')->get()
+        );
+
+        return view('policy_documents.report_versions', [
+            'documents' => $documents,
+            'versionStats' => [
+                'records' => $documents->count(),
+                'roots' => $documents->whereNull('parent_document_id')->count(),
+                'derived' => $documents->whereNotNull('parent_document_id')->count(),
+                'effective' => $documents->where('is_effective_published_version', true)->count(),
+            ],
+        ]);
+    }
+
+    private function canManageDocuments(?User $user): bool
+    {
+        return $user?->canManagePolicies() ?? false;
+    }
+
+    private function editableCreators()
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'])
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function creatorValidationRules(bool $nullable = true): array
+    {
+        return array_filter([
+            $nullable ? 'nullable' : null,
+            Rule::exists('users', 'id')->where(function ($query): void {
+                $query->where('is_active', true)
+                    ->whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison']);
+            }),
+        ]);
+    }
+
+    private function ensureValidStatusTransition(string $from, string $to): void
+    {
+        if (! in_array($to, self::STATUS_TRANSITIONS[$from] ?? [], true)) {
+            throw ValidationException::withMessages([
+                'status' => sprintf('A document cannot move from %s to %s.', $from, $to),
+            ]);
+        }
+    }
+
+    private function topicCategoryOptions()
+    {
+        return TopicCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name', 'slug');
+    }
+
+    private function subtopicOptions()
+    {
+        return TopicSubtopic::query()
+            ->select(['id', 'topic_category_id', 'name'])
+            ->with('mainTopic:id,slug,name')
+            ->where('is_active', true)
+            ->whereHas('mainTopic', fn ($query) => $query->where('is_active', true))
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function topicDetailOptions()
+    {
+        return TopicDetail::query()
+            ->select(['id', 'main_topic_id', 'name'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function lookupOptions(string $type, array $fallback)
+    {
+        $options = LookupValue::query()
+            ->where('type', $type)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->pluck('description', 'code');
+
+        return $options->isEmpty() ? collect($fallback) : $options;
+    }
+
+    private function lookupCodes(string $type, array $fallback): array
+    {
+        $codes = LookupValue::query()->where('type', $type)->where('is_active', true)->pluck('code')->all();
+
+        return $codes === [] ? $fallback : $codes;
+    }
+
+    private function availableFormTemplates(?User $viewer)
+    {
+        if (! config('features.form_builder')) {
+            return collect();
+        }
+
+        return FormTemplate::with('fields')->where('is_active', true)
+            ->when($viewer?->isKcdiomLiaison(), fn ($query) => $query->where('owner_unit', 'kcdiom'))
+            ->orderBy('name')->get()->map(function (FormTemplate $template) {
+                $template->fields->each(function ($field): void {
+                    $field->setAttribute('resolved_options', $this->dynamicFieldOptions($field->data_source, $field->options ?? []));
+                });
+                return $template;
+            });
+    }
+
+    private function dynamicFieldOptions(?string $source, array $manual): array
+    {
+        return match ($source) {
+            'users' => User::where('is_active', true)->orderBy('name')->get()->map(fn ($u) => ['value' => (string) $u->id, 'label' => $u->name])->all(),
+            'main_topics' => TopicCategory::where('is_active', true)->orderBy('name')->get()->map(fn ($v) => ['value' => $v->slug, 'label' => $v->name])->all(),
+            'subtopics' => TopicSubtopic::where('is_active', true)->orderBy('name')->get()->map(fn ($v) => ['value' => (string) $v->id, 'label' => $v->name])->all(),
+            'departments' => $this->masterOptions('DEPARTMENT', User::where('is_active', true)->whereNotNull('unit')->distinct()->orderBy('unit')->pluck('unit')->all()),
+            'user_roles' => $this->masterOptions('USER_ROLE', User::where('is_active', true)->whereNotNull('role')->distinct()->orderBy('role')->pluck('role')->all()),
+            'access_scopes' => [['value' => 'all', 'label' => 'ALL'], ['value' => 'kcdiom', 'label' => 'KCDIOM'], ['value' => 'msd', 'label' => 'MSD']],
+            'document_types' => $this->lookupOptions('DOCUMENT_TYPE', [])->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
+            'document_statuses' => $this->lookupOptions('DOCUMENT_STATUS', [])->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
+            default => str_starts_with((string) $source, 'lov:')
+                ? $this->lookupOptions(substr($source, 4), [])->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all()
+                : $manual,
+        };
+    }
+
+    private function masterOptions(string $lookupType, array $fallback): array
+    {
+        $options = $this->lookupOptions($lookupType, array_combine($fallback, array_map(fn ($value) => strtoupper(str_replace('_', ' ', $value)), $fallback)) ?: []);
+        return $options->map(fn ($label, $value) => ['value' => (string) $value, 'label' => $label])->values()->all();
+    }
+
+    private function validateDynamicForm(Request $request, ?User $viewer, ?int $templateId): array
+    {
+        if (! $templateId) return [null, []];
+        $template = FormTemplate::with('fields')->whereKey($templateId)->where('is_active', true)
+            ->when($viewer?->isKcdiomLiaison(), fn ($query) => $query->where('owner_unit', 'kcdiom'))->firstOrFail();
+        $rules = [];
+        foreach ($template->fields as $field) {
+            if ($field->binding || in_array($field->type, ['heading', 'paragraph'], true)) continue;
+            $rule = [$field->is_required ? 'required' : 'nullable'];
+            $rule[] = match ($field->type) { 'number' => 'numeric', 'date' => 'date', 'email' => 'email', 'checkbox' => 'boolean', 'multi_select' => 'array', default => 'string' };
+            $validation = $field->validation ?? [];
+            if (isset($validation['min'])) $rule[] = 'min:'.$validation['min'];
+            if (isset($validation['max'])) $rule[] = 'max:'.$validation['max'];
+            if (! empty($validation['pattern'])) $rule[] = 'regex:'.$validation['pattern'];
+            if (in_array($field->type, ['select', 'radio', 'multi_select'], true)) {
+                $allowed = collect($this->dynamicFieldOptions($field->data_source, $field->options ?? []))->pluck('value')->map(fn ($v) => (string) $v)->all();
+                if ($allowed && $field->type !== 'multi_select') $rule[] = Rule::in($allowed);
+            }
+            $rules['dynamic.'.$field->name] = $rule;
+            if ($field->type === 'multi_select') {
+                $allowed = collect($this->dynamicFieldOptions($field->data_source, $field->options ?? []))->pluck('value')->map(fn ($v) => (string) $v)->all();
+                if ($allowed) $rules['dynamic.'.$field->name.'.*'] = [Rule::in($allowed)];
+            }
+        }
+        return [$template, $request->validate($rules)['dynamic'] ?? []];
+    }
+
+    private function ensureSubtopicMatchesMainTopic(?string $mainTopicSlug, ?int $subtopicId): void
+    {
+        if (! $subtopicId) {
+            return;
+        }
+
+        if (! $mainTopicSlug) {
+            throw ValidationException::withMessages([
+                'topic_category' => 'Please select a main topic when a subtopic is selected.',
+            ]);
+        }
+
+        $isMatching = TopicSubtopic::query()
+            ->whereKey($subtopicId)
+            ->whereHas('mainTopic', fn ($query) => $query->where('slug', $mainTopicSlug))
+            ->exists();
+
+        if (! $isMatching) {
+            throw ValidationException::withMessages([
+                'subtopic_id' => 'Selected subtopic does not belong to the selected main topic.',
+            ]);
+        }
+    }
+
+    private function ensureTopicDetailMatchesMainTopic(?int $mainTopicId, ?int $topicDetailId): void
+    {
+        if (! $topicDetailId) {
+            return;
+        }
+
+        if (! $mainTopicId || ! TopicDetail::query()->whereKey($topicDetailId)->where('main_topic_id', $mainTopicId)->exists()) {
+            throw ValidationException::withMessages([
+                'topic_detail_id' => 'Selected subtopic does not belong to the selected main topic.',
+            ]);
+        }
+    }
+
+    private function canViewDocument(?User $user, PolicyDocument $policyDocument): bool
+    {
+        return PolicyDocument::query()
+            ->whereKey($policyDocument->id)
+            ->visibleTo($user)
+            ->exists();
+    }
+
+    private function ensureCanManageDocuments(?User $user): void
+    {
+        abort_unless($this->canManageDocuments($user), 403);
+    }
+
+    private function ensureOwnerUnitAccess(?User $user, string $ownerUnit): void
+    {
+        // All policy_manager users (MSD/KCDIOM) manage documents across all units.
+    }
+
+    private function canPublishDocument(?User $user, PolicyDocument $policyDocument): bool
+    {
+        return $this->canManageDocuments($user) && $policyDocument->status !== 'published';
+    }
+
+    private function findHistoricalRecords(?User $viewer, string $lookupTerm)
+    {
+        if ($lookupTerm === '') {
+            return collect();
+        }
+
+        return PolicyDocument::query()
+            ->with('creator')
+            ->withCount('versions')
+            ->visibleTo($viewer)
+            ->whereNull('parent_document_id')
+            ->where(function ($query) use ($lookupTerm): void {
+                $query->where('title', 'like', '%'.$lookupTerm.'%');
+
+                if (is_numeric($lookupTerm)) {
+                    $query->orWhereKey((int) $lookupTerm);
+                }
+            })
+            ->latest()
+            ->limit(10)
+            ->get();
+    }
+
+    private function decoratePaginator($documents)
+    {
+        $documents->setCollection($this->decorateCollection($documents->getCollection()));
+
+        return $documents;
+    }
+
+    private function attachVersionFamilies($documents, ?User $viewer): void
+    {
+        $rootIds = $documents
+            ->map(fn (PolicyDocument $document) => $document->parent_document_id ?: $document->id)
+            ->unique()
+            ->values();
+
+        if ($rootIds->isEmpty()) {
+            return;
+        }
+
+        $families = PolicyDocument::query()
+            ->visibleTo($viewer)
+            ->where(function ($query) use ($rootIds): void {
+                $query->whereIn('id', $rootIds)->orWhereIn('parent_document_id', $rootIds);
+            })
+            ->orderByDesc('version_number')
+            ->get()
+            ->groupBy(fn (PolicyDocument $document) => $document->parent_document_id ?: $document->id);
+
+        $documents->each(function (PolicyDocument $document) use ($families): void {
+            $rootId = $document->parent_document_id ?: $document->id;
+            $document->setRelation('versionFamily', $families->get($rootId, collect()));
+        });
+    }
+
+    private function decorateCollection($documents)
+    {
+        return $documents->map(fn (PolicyDocument $document) => $this->decorateDocument($document));
+    }
+
+    private function decorateDocument(PolicyDocument $document): PolicyDocument
+    {
+        $rootId = $document->parent_document_id ?: $document->id;
+
+        $effectiveVersionNumber = PolicyDocument::query()
+            ->where(function ($query) use ($rootId): void {
+                $query->where('id', $rootId)
+                    ->orWhere('parent_document_id', $rootId);
+            })
+            ->where('status', 'published')
+            ->max('version_number');
+
+        $document->setAttribute('effective_version_number', $effectiveVersionNumber);
+        $document->setAttribute(
+            'is_effective_published_version',
+            $effectiveVersionNumber !== null && (int) $effectiveVersionNumber === (int) $document->version_number
+        );
+
+        return $document;
+    }
+
+    private function notifyPublishedDocumentRecipients(PolicyDocument $policyDocument, ?int $publisherId): void
+    {
+        $notificationClass = $policyDocument->is_circular
+            ? CircularPublishedNotification::class
+            : DocumentPublishedNotification::class;
+
+        User::query()
+            ->where('is_active', true)
+            ->where('id', '!=', $publisherId)
+            ->get()
+            ->filter(fn (User $user) => $user->canReceiveCircularNotificationFor($policyDocument))
+            ->each(fn (User $user) => $user->notify(new $notificationClass($policyDocument)));
+    }
+
+    private function storePdfUploads(Request $request): array
+    {
+        $files = collect($request->file('files', []))->filter();
+
+        // Continue accepting the previous single-file field for existing clients.
+        if ($request->hasFile('file')) {
+            $files->prepend($request->file('file'));
+        }
+
+        return $files->map(fn (UploadedFile $file): array => [
+            'file' => $file,
+            'path' => $file->store('policy-documents', 'public'),
+        ])->values()->all();
+    }
+
+    private function recordAttachments(PolicyDocument $document, array $uploads): void
+    {
+        if ($uploads === []) {
+            return;
+        }
+
+        $rootId = $document->parent_document_id ?: $document->id;
+        $history = DocumentHistory::where('policy_document_id', $rootId)
+            ->where('version_number', $document->version_number)
+            ->first();
+
+        foreach ($uploads as $upload) {
+            /** @var UploadedFile $file */
+            $file = $upload['file'];
+            $storedPath = $upload['path'];
+
+            DocumentAttachment::create([
+                'policy_document_id' => $rootId,
+                'document_history_id' => $history?->id,
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $storedPath,
+                'file_size' => $file->getSize(),
+                'file_type' => $file->getClientMimeType(),
+                'checksum_sha256' => hash('sha256', Storage::disk('public')->get($storedPath)),
+                'security_status' => 'validated',
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
+    }
+
+    private function copyAttachmentsToVersion(PolicyDocument $document, $attachments): void
+    {
+        if ($attachments->isEmpty()) {
+            return;
+        }
+
+        $rootId = $document->parent_document_id ?: $document->id;
+        $history = DocumentHistory::query()
+            ->where('policy_document_id', $rootId)
+            ->where('version_number', $document->version_number)
+            ->first();
+
+        foreach ($attachments as $attachment) {
+            DocumentAttachment::create([
+                'policy_document_id' => $rootId,
+                'document_history_id' => $history?->id,
+                'file_name' => $attachment->file_name,
+                'file_path' => $attachment->file_path,
+                'file_size' => $attachment->file_size,
+                'file_type' => $attachment->file_type,
+                'checksum_sha256' => $attachment->checksum_sha256,
+                'security_status' => $attachment->security_status,
+                'integrity_verified_at' => $attachment->integrity_verified_at,
+                'uploaded_by' => $attachment->uploaded_by,
+            ]);
+        }
+    }
+}

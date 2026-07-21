@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use App\Models\PolicyDocument;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,7 +21,13 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'staff_id',
+        'cas_username',
         'email',
+        'role',
+        'unit',
+        'is_active',
+        'last_cas_sync_at',
         'password',
     ];
 
@@ -43,7 +50,67 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_active' => 'boolean',
+            'last_cas_sync_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->is_active && $this->role === $role;
+    }
+
+    public function isPolicyManager(): bool
+    {
+        return $this->is_active && in_array($this->role, ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'], true);
+    }
+
+    public function isSystemAdmin(): bool
+    {
+        return $this->is_active && in_array($this->role, ['system_admin', 'msd_admin'], true);
+    }
+
+    public function canAdministerAccess(): bool
+    {
+        return $this->isSystemAdmin();
+    }
+
+    public function isViewerActor(): bool
+    {
+        return ! $this->isPolicyManager() && $this->is_active;
+    }
+
+    public function actorLabel(): string
+    {
+        return $this->isSystemAdmin() ? 'System Administrator' : ($this->isPolicyManager() ? 'Policy Manager (MSD/KCDIOM)' : 'Staff/Public');
+    }
+
+    public function isMsdAdmin(): bool
+    {
+        return $this->isSystemAdmin();
+    }
+
+    public function isKcdiomLiaison(): bool
+    {
+        return $this->isPolicyManager() && $this->unit === 'kcdiom';
+    }
+
+    public function canManagePolicies(): bool
+    {
+        return $this->isPolicyManager();
+    }
+
+    public function canReceiveCircularNotificationFor(PolicyDocument $policyDocument): bool
+    {
+        if (! $this->is_active) {
+            return false;
+        }
+
+        if ($policyDocument->access_scope === 'all') {
+            return true;
+        }
+
+        return $this->unit === $policyDocument->access_scope;
     }
 }
