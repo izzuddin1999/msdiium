@@ -1,0 +1,196 @@
+# FRS-review.docx
+
+## Paragraphs
+P2 [Normal]: EXECUTIVE SUMMARY
+P3 [Normal]: This document describes business and user requirements for the development of a new Hurman Resources Information System The content includes detailed information on business scope, system overview, stakeholders involved, business management requirements, business operation requirements and business process requirements. This document will be an input to the preparation of System Requirements Specifications to be developed.
+P27 [Normal]: DOCUMENT APPROVAL
+P29 [Normal]: Prepared by
+P31 [Normal]: Reviewed by Technical Team Member
+P33 [Normal]: Approved by Functional Team Member
+P36 [Normal]: REVISION HISTORY
+P62 [Normal]: ACRONYMS
+P83 [Normal]: REFERENCES
+P103 [Heading 1]: 1.0 INTRODUCTION
+P105 [Heading 2]: Objective
+P107 [List Paragraph]: The objective of this system is to develop a centralized Policy Circular Management System for university-wide usage. This document provides a functional requirement overview for developing the new Policy and Circular System. This document details the project scopes, integration scopes, system architecture, process flow and related appendixes related to the system requirements.
+P109 [Heading 2]: Scope
+P111 [Normal]: The scope of the Policy and Circular System includes:
+P112 [List Paragraph]: Management Policy and Circular
+P113 [List Paragraph]: Management of Access Role
+P115 [Heading 2]: Business Overview
+P117 [Caption]: Figure 1 Overall Business Overview
+P119 [Heading 2]: Stakeholder
+P121 [List Paragraph]: List of stakeholders related in the management of organizational structure module.
+P123 [Caption]: Table 1 : List of Stakeholder
+P126 [Heading 1]: BUSINESS REQUIREMENTS
+P128 [Heading 2]: Goal and Objectives
+P130 [List Paragraph]: To provide a centralized platform for managing policy and circular documents so that all organizational policies and circulars are stored in a single repository, making them easier to manage, access, and maintain.
+P131 [List Paragraph]: To improve operational efficiency and reduce manual processes by digitizing policy and circular management activities, minimizing paperwork, and reducing document duplication.
+P132 [List Paragraph]: To improve accessibility of policy and circular information by enabling authorized users to search, view, and retrieve documents quickly and efficiently.
+P133 [List Paragraph]: To facilitate the creation, updating, and publication of policy circulars by providing a structured process for managing document information and related files throughout their lifecycle.
+P135 [Heading 2]: Business Architecture
+P137 [List Paragraph]: Business architecture provides a high-level overview of how an organization's components, processes, and functions integrate to achieve its strategic objectives. It plays a crucial role in defining the business context, ensuring that the functional requirements align with the organization's goals and operational needs. This alignment helps maintain a coherent connection between the business objectives and the operational framework.
+P139 [Caption]: Figure 2 : Business Architecture of Human Resources
+P142 [Heading 2]: Data Architecture
+P144 [List Paragraph]: "Data Architecture" refers to the structured design and organization of data within a system, application, or database. It defines how data is collected, stored, processed, accessed, and managed to meet the functional requirements and overall objectives of the project.
+P147 [List Paragraph]: Figure 3: Data Architecture
+P148 [Heading 1]: BUSINESS PROCESS REQUIREMENTS
+P150 [Heading 2]: Business Function Requirements
+P152 [ZEY-HEAD3]: The Notation
+P154 [ZEY-HEAD3]: Refer to Business Function Notation at Appendix A.
+P156 [ZEY-HEAD3]: Business Function Model
+P158 [List Paragraph]: This section is a space to provide a Business Function Model consisting of a Function Hierarchy Diagram as well as a description of the functions.
+P160 [Zey-SubHeading]: Business Function Hierarchy
+P162 [Caption]: Figure 4 : Business Function Hierarchy
+P164 [List Paragraph]: Business Function Description
+P166 [Caption]: Table 2 : Business Function Description
+P168 [Zey-SubHeading]: List of System Users
+P169 [Caption]: Table 3 : List of System Users
+P173 [Heading 2]: Business Proses Requirements
+P175 [ZEY-HEAD3]: The Notation
+P177 [List Paragraph]: Refer to Business Process Requirements Notation at Appendix A.
+P179 [ZEY-HEAD3]: Model and Definition of Business Process.
+P181 [Normal]: The business function process flow diagram and definition of business function activities are details of the basic functions found in item 3.1.2.
+P183 [List Paragraph]: HR-03-01 – Policy and Circular System
+P184 [Normal]: `
+P185 [Caption]: Figure 5 : Process Flow Diagram for Management of IIUM Policy and Circular System.
+P191 [List Paragraph]: HR03-02 Management of Access Role
+P192 [Caption]: Figure 6 : Process Flow for Management of Access Role
+P200 [List Paragraph]: ---------------------------------------------------- END OF DOCUMENT --------------------------------------------------
+
+## Tables
+
+### Table 1
+R1: NAME | POSITION | SIGNATURE / DATE
+R2: Ahmad Izzuddin Bin Ahmad Sakri | Information Technology Intern | 
+R3: Tengku Zemy Azmira binti T Aziz | Team Lead Human Resources & Admin Services Senior Information Technology Officer Human Resources and Admin Services | 
+
+### Table 2
+R1: NAME | POSITION | SIGNATURE / DATE
+R2: Abu Hurairah bin Abd. Manaf | Technical Project Manager Deputy Director Information Technology Division | 
+R3: Hairul Laila binti Din | Functional Project Manager Deputy Director Information Technology Division | 
+
+### Table 3
+R1: NAME | POSITION | SIGNATURE / DATE
+R2: Kamarrudin bin Ali | Functional Project Manager for Human Resources Director Management Services Division. | 
+R3: Noraini binti Md Ghazali | Process Owner (Organizational Information) Assistant Director Management Services Division | 
+
+### Table 4
+R1: Version | Date | Prepared / Revised by | Summary of revision | Distribution list
+R2: 1.0 | 30/5/2026 | Ahmad Izzuddin Bin Ahmad Sakri | New submission of FRS | ITG, Functional Team, Technical Team
+R3:  |  | Tengku Zemy Azmira T Aziz |  | 
+R4:  |  |  |  | 
+R5:  |  |  |  | 
+R6:  |  |  |  | 
+R7:  |  |  |  | 
+R8:  |  |  |  | 
+R9:  |  |  |  | 
+R10:  |  |  |  | 
+R11:  |  |  |  | 
+
+### Table 5
+R1: CODE | DESCRIPTIONS
+R2: ED | Executive Director
+R3: DD | Deputy Director
+R4: BOG | Board of Governors
+R5:  | 
+R6:  | 
+R7:  | 
+R8:  | 
+R9:  | 
+
+### Table 6
+R1: POLICY AND PROCEDURE RELATED | POLICY AND PROCEDURE RELATED | POLICY AND PROCEDURE RELATED
+R2: No | Policy and Procedure Name | Section Details
+R3: 1 |  | 
+R4: 2 |  | 
+R5: 3 |  | 
+R6: 4 |  | 
+R7: 5 |  | 
+
+### Table 7
+R1: STAKEHOLDER | DESCRIPTION | KCIOM
+R2: Top Management | Officers consisting of the Rector, Deputy Rector, Dean, Deputy Deans, Chief Librarian, Head of Office for all KCDIOM | All
+R3: Policy Unit …check nama | Functional process owner for management of policy and circular for MSD. | MSD
+R4: KCDIOM Liaison | Staff with access rights to specific module and able to use the system. | All
+
+### Table 8
+R1: Level | Function Code | Function Name | Description | Actor
+R2: 2 | HR-19-01 | Management Policy Circular | Handles all circular management activities including creation, updating, and maintaining circular information within the system. | MSD Administrator / KCDIOM Liaison
+R3: 2 | HR-19-02 | Management of Access Role | Manages user roles and access permissions to ensure secure and controlled access to circular data and system functions. | MSD Administrator / KCDIOM Liaison
+
+### Table 9
+R1: No | System User | Description | Role Type
+R2: 1 | MSD Administrator / KCDIOM Liaison | Responsible for managing circular information, updating content, uploading documents, and activating circulars for publication in the system. | System Administrator
+R3: 2 | Staff / User | University staff who access the system to view published circulars based on access permissions. | End User
+R4: 3 | System | Automated system component responsible for handling data processing. | System Process
+
+### Table 10
+R1: BUSINESS FUNCTION | BUSINESS FUNCTION | BUSINESS FUNCTION | BUSINESS FUNCTION | BUSINESS FUNCTION | BUSINESS FUNCTION
+R2: Function | Function | Function | HR-19-01 | HR-19-01 | HR-19-01
+R3: Function Name | Function Name | Function Name | Policy and Circular Management | Policy and Circular Management | Policy and Circular Management
+R4: Sub Function | Sub Function | Sub Function | HR-19-01-BF01 | HR-19-01-BF01 | HR-19-01-BF01
+R5: Sub Function Name | Sub Function Name | Sub Function Name | Management of Policy and Circular | Management of Policy and Circular | Management of Policy and Circular
+R6: Main Responsibilities | Main Responsibilities | Main Responsibilities | 1. MSD Administrator / KCDIOM Liaison 2. Staff / User | 1. MSD Administrator / KCDIOM Liaison 2. Staff / User | 1. MSD Administrator / KCDIOM Liaison 2. Staff / User
+R7: PROCESS ACTIVITY | PROCESS ACTIVITY | PROCESS ACTIVITY | PROCESS ACTIVITY | PROCESS ACTIVITY | PROCESS ACTIVITY
+R8: No | Business Process ID | Business Process Name | Business Process Name | Role
+R9: 1 | HR19-SF01-BP01 | Receive Approved Document The Administrator receives a verified and formally approved document from the approving bodies. System shall allow submission by MSD or KCDIOM Liaison. | Receive Approved Document The Administrator receives a verified and formally approved document from the approving bodies. System shall allow submission by MSD or KCDIOM Liaison. | MSD Administrator / KCDIOM Liaison
+R10: 2 | HR19-SF01-BP02 | New Document? The administrator checks whether the document is a new policy or already existed and shall be updated as new version. Admin may search the document title in the system. System prompts the admin if the document already exist and advise for new version. to specify whether the document is new or already exists in the repository. If Yes, the flow proceeds to Create New Record. If No, the system prompts the user to search historical records. System shall be able to filter the document and submission by MSD or KCDIOM. KCDIOM shall only display their own document only. | New Document? The administrator checks whether the document is a new policy or already existed and shall be updated as new version. Admin may search the document title in the system. System prompts the admin if the document already exist and advise for new version. to specify whether the document is new or already exists in the repository. If Yes, the flow proceeds to Create New Record. If No, the system prompts the user to search historical records. System shall be able to filter the document and submission by MSD or KCDIOM. KCDIOM shall only display their own document only. | MSD Administrator
+R11: 3 | HR19-SF01-BP03 | Create New Record The system provides a blank form for the user to input the metadata and details of the new document. System shall allow creation of multiple types of documents such as policy, guidelines and circular Admin shall be able to set the access type for each document i.e. All , KCDIOM Only, MSD Only | Create New Record The system provides a blank form for the user to input the metadata and details of the new document. System shall allow creation of multiple types of documents such as policy, guidelines and circular Admin shall be able to set the access type for each document i.e. All , KCDIOM Only, MSD Only | MSD Administrator
+R12: 5 | HR19-SF01-BP05 | Search Record The user must have to key in based their previous data follow by id or any related with information. | Search Record The user must have to key in based their previous data follow by id or any related with information. | MSD Administrator
+R13: 6 | HR19-SF01-BP06 | Create New Version The system automatically increments the version counter and associates the new entry as a superseding version of the existing document. | Create New Version The system automatically increments the version counter and associates the new entry as a superseding version of the existing document. | MSD Administrator
+R14: 7 | HR19-SF01-BP07 | Upload File The system prompts the user to upload the official document attachment (e.g., PDF or standard document format). System shall restrict the types of documents. Security check | Upload File The system prompts the user to upload the official document attachment (e.g., PDF or standard document format). System shall restrict the types of documents. Security check | MSD Administrator
+R15: 8 | HR19-SF01-BP08 | Publish Admin will publish the new record. The system processes and prepares all finalized document information and metadata entered by the MSD KCDIOM for release. | Publish Admin will publish the new record. The system processes and prepares all finalized document information and metadata entered by the MSD KCDIOM for release. | MSD Administrator
+R16: 9 | HR19-SF01-BP09 | Is Circular? Admin may activate the document and ‘Circular’ for distribution to staff. Upon activation, system shall…… The system evaluates or asks the user whether the document should be categorized specifically as an organizational circular. If Yes, it initiates the circulation sequence. If No, it routes to standard record management. | Is Circular? Admin may activate the document and ‘Circular’ for distribution to staff. Upon activation, system shall…… The system evaluates or asks the user whether the document should be categorized specifically as an organizational circular. If Yes, it initiates the circulation sequence. If No, it routes to standard record management. | MSD Administrator
+R17: 10 | HR19-SF01-BP10 | Set Document For Circulation If designated as a circular, the system marks the document status automatically. | Set Document For Circulation If designated as a circular, the system marks the document status automatically. | MSD Administrator
+R18: 11 | HR19-SF01-BP11 | Manage Record Admin may update and update the status for the document, i.e. Inactive, archive | Manage Record Admin may update and update the status for the document, i.e. Inactive, archive | MSD Administrator
+R19: 12 | HR19-SF01-BP12 | Notification The system broadcasts alerts and notifications to users regarding the newly published circulation Auto email? Auto notification at Staff Portal? | Notification The system broadcasts alerts and notifications to users regarding the newly published circulation Auto email? Auto notification at Staff Portal? | Staff
+R20: 13 | HR19-SF01-BP13 | View Document The system allows authorized users audiences to view and read the published document. Staff may access all documents according to specified access roles | View Document The system allows authorized users audiences to view and read the published document. Staff may access all documents according to specified access roles | MSD Administrator/ KCDIOM Liaison / Staff
+R21:  | VALIDATION RULES | VALIDATION RULES | VALIDATION RULES | VALIDATION RULES
+R22:  | Mandatory Fields - Title, content, and creator must not be empty Duplicate Check - System shall prevent duplicate circular entries. Status Validation - Circular status must follow sequence Input Format - Text fields must follow defined format and length | Mandatory Fields - Title, content, and creator must not be empty Duplicate Check - System shall prevent duplicate circular entries. Status Validation - Circular status must follow sequence Input Format - Text fields must follow defined format and length | Mandatory Fields - Title, content, and creator must not be empty Duplicate Check - System shall prevent duplicate circular entries. Status Validation - Circular status must follow sequence Input Format - Text fields must follow defined format and length | Mandatory Fields - Title, content, and creator must not be empty Duplicate Check - System shall prevent duplicate circular entries. Status Validation - Circular status must follow sequence Input Format - Text fields must follow defined format and length
+
+### Table 11
+R1: DATA | DATA
+R2: No | Data Name
+R3: 1 | Policy Circular Record
+R4: 2 | Uploaded Circular File
+R5: 3 | Circular Version Information
+
+### Table 12
+R1: REPORT REQUIRED | REPORT REQUIRED | REPORT REQUIRED
+R2: No | Report Name | Description
+R3: 1 | HR-19-01-BF01-RP01 Policy Circular Report | Displays all circular records and status
+R4: 2 | HR-19-SF01-RP02 Circular Version Report | Displays new and existing circular versions
+
+### Table 13
+R1:  | BUSINESS FUNCTION | BUSINESS FUNCTION | BUSINESS FUNCTION
+R2: Function | Function | HR19-02 | HR19-02
+R3: Function Name | Function Name | Management of Access Role | Management of Access Role
+R4: Sub Function | Sub Function | HR03-02-BF01 | HR03-02-BF01
+R5: Sub Function Name | Sub Function Name | Role Management | Role Management
+R6: Main Responsibilities | Main Responsibilities | 1. MSD Administrator 2. KCDIOM Liaison 3. Staff/User | 1. MSD Administrator 2. KCDIOM Liaison 3. Staff/User
+R7:  | PROCESS ACTIVITY | PROCESS ACTIVITY | PROCESS ACTIVITY
+R8: No | Business Process ID | Business Process Name | Role
+R9: 1 | HR19-SF02-BP01 | Register User The MSD Administrator registers a new user account into the system repository. | MSD Administrator
+R10: 2 | HR19-SF02-BP02 | Assign User Role The MSD Administrator configures and assigns specific system roles to a user, establishing viewing and transactional limits based on organizational functionality. | MSD Administrator
+R11: 3 | HR19-SF02-BP03 | Update User Role The system permits authorized modifications to an existing user's role profile when permissions or responsibilities change. | MSD Administrator
+R12: 4 | HR19-SF02-BP04 | Store User Information The system database securely commits and stores the user’s updated account metadata, credentials, and profile details. | MSD Administrator
+R13: 5 | HR19-SF02-BP05 | Validate Login The system securely cross-references the submitted username and password parameters against the stored credentials to grant or deny access. | MSD Administrator
+R14: 6 | HR19-SF02-BP06 | Manage Access Permission The system controls user access based on assigned roles. | System
+R15: 7 | HR19-SF02-BP07 | Terminate Session The system invalidates the authentication token, clears temporary cache values, and terminates the active session to prevent unauthorized reuse. | System
+R16: 8 | HR19-SF02-BP08 | Login CAS System The user requests authentication by submitting institutional credentials into the Central Authentication Service (CAS) portal interface. | Staff / User
+R17: 9 | HR19-SF02-BP09 | Access System Following successful authentication, the user establishes a live session and enters the system landing environment. | Staff / User
+R18: 10 | HR19-SF02-BP10 | Logout System User logs out and the system terminates the session securely. | Staff / User
+R19:  | VALIDATION RULES | VALIDATION RULES | VALIDATION RULES
+R20:  | Authentication Validation: The system must validate user credentials through the secure Central Authentication Service (CAS) before granting access to any internal functions. | Authentication Validation: The system must validate user credentials through the secure Central Authentication Service (CAS) before granting access to any internal functions. | Authentication Validation: The system must validate user credentials through the secure Central Authentication Service (CAS) before granting access to any internal functions.
+
+### Table 14
+R1: DATA | DATA
+R2: No | Data Name
+R3: 1 | User Information
+
+### Table 15
+R1: REPORT REQUIRED | REPORT REQUIRED | REPORT REQUIRED
+R2: No | Report Name | Description
+R3:  |  | List of user access
+R4:  |  | 

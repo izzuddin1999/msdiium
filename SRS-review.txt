@@ -1,0 +1,156 @@
+# SRS-review.docx
+
+## Paragraphs
+P3 [Normal]: EXECUTIVE SUMMARY
+P5 [Normal]: This document describes business and user requirements for the development of a new Hurman Resources Information System The content includes detailed information on business scope, system overview, stakeholders involved, business management requirements, business operation requirements and business process requirements. This document will be an input to the preparation of System Requirements Specifications to be developed.
+P27 [Normal]: DOCUMENT APPROVAL
+P29 [Normal]: Prepared by
+P31 [Normal]: Reviewed by Technical Team Member
+P33 [Normal]: Approved by Functional Team Member
+P39 [Normal]: REVISION HISTORY
+P55 [Normal]: TABLE OF CONTENTS
+P68 [Heading 1]: INTRODUCTION
+P70 [Heading 2]: Objective
+P72 [Normal]: The primary objective of a Software Requirements Specification (SRS) document is to define the functional and non-functional requirements of the Project Policy and Circular System. It serves as a crucial communication tool between various stakeholders, including clients, project managers, software developers, and quality assurance teams. The SRS outlines the software's functionality, performance, design, and constraints, providing a comprehensive understanding of the project's requirements
+P73 [Heading 2]: Scope
+P74 [Normal]: This module will cover:
+P75 [List Paragraph]: Management of Policy Circular
+P76 [List Paragraph]: Management of Access Role
+P77 [Heading 2]: Actor of the System
+P79 [Caption]: Table 1 : Actor of the System
+P82 [Heading 1]: SYSTEM ARCHITECTURE
+P84 [Heading 2]: Information Architecture
+P86 [List Paragraph]: Update add data of staff from CAS – User and HURIS – KCDIOM Info
+P87 [Caption]: Figure 1 : Information Architecture
+P89 [Heading 2]: System Environment
+P91 [List Paragraph]: PostgreSQL
+P92 [List Paragraph]: The system will be developed using PostgreSQL database. There shall be an integration with current Oracle Database since many information are still available in the Oracle Database.
+P94 [List Paragraph]: PHP Laravel
+P95 [List Paragraph]: Laravel provides a variety of tools and features for developing web applications, including routing, middleware, controllers, models, views, and authentication. It follows the Model-View-Controller (MVC) architectural pattern and emphasizes convention over configuration, which means that developers can get up and running quickly without having to spend a lot of time configuring the framework.
+P97 [List Paragraph]: Visual Studio
+P99 [List Paragraph]: Visual Studio serves as the primary integrated development environment (IDE). It supports PHP and Laravel development workflows, including debugging, testing, and source control integration, ensuring high developer productivity.
+P102 [Heading 2]: Integration
+P104 [Normal]: The Policy and Circular System shall be integrated with Central Authentication System (CAS) for authentication method and HURIS for KCDIOM information.
+P105 [Heading 1]: SYSTEM FUNCTION MODELLING
+P107 [Heading 2]: Modelling Notation
+P109 [Normal]: Refer to System Function Modelling Notation as in Appendix A.
+P111 [Heading 2]: System Functional Hierarchy
+P113 [Normal]: Figure below illustrate the functional hierarchy of the IIUM Promotion System produced from the activity of modelling system functions on the Business Process Requirements (BPR) documented in the Functional User Requirements (FRS).
+P115 [Caption]: Figure 2 : Functional Hierarchy for Policy and Circular Structure
+P117 [List Paragraph]: Besarkan font
+P118 [List Paragraph]: User Module – Combine Notification box into 1 process only
+P119 [List Paragraph]: Reporting – Jadi 1 je generate report and dashboard
+P120 [Heading 2]: Table of Actor Matching to System Function
+P122 [Caption]: Table 2 : Actor Matching to System for Admin Module
+P125 [Caption]: Table 3 : Actor Matching to System for List of Values (LOV) Module
+P127 [Caption]: Table 4 : Actor Matching to System for Reporting Module
+P128 [Normal]: Table 5: Actor Matching to System for User Access Module
+P130 [Heading 1]: USE CASE MODELLING
+P132 [Heading 2]: Admin Module
+P134 [List Paragraph]: Use Case Diagram
+P135 [Caption]: Figure 3 : Use Case Diagram for admin Module
+P137 [List Paragraph]: Plus actor KCDIOM Liaison
+P138 [List Paragraph]: Use Case Descriptions
+P140 [Caption]: Table 5 : Use Case Descriptions for Admin Module
+P142 [Heading 2]: User Module
+P144 [List Paragraph]: Use Case Diagram
+P146 [Caption]: Figure 4 : Use Case Diagram for User Module
+P148 [List Paragraph]: Link dr notification system to ke staff juga
+P150 [List Paragraph]: Use Case Description
+P151 [Caption]: Table 6 : Use Case Description for User Module
+P153 [Heading 2]: Reporting Dashboard Module
+P155 [List Paragraph]: Use Case Diagram
+P157 [Caption]: Figure 4 : Use Case Diagram for reporting Module
+P159 [List Paragraph]: Use Case Description
+P160 [Caption]: Table 6 : Use Case Description for reporting Module
+P163 [Heading 2]: User Access Module
+P165 [List Paragraph]: Use Case Diagram
+P166 [Caption]: Figure 4 : Use Case Diagram for User Access Module
+P168 [List Paragraph]: Use Case Description
+P169 [Caption]: Table 6 : Use Case Description for User Access Module
+P172 [Normal]: ------------------------------------------------ END OF DOCUMENT ----------------------------------------------
+
+## Tables
+
+### Table 1
+R1: NAME | POSITION | SIGNATURE / DATE
+R2: Tengku Zemy Azmira binti T Aziz | Team Lead Human Resources & Admin Services Senior Information Technology Officer Human Resources and Admin Services | 
+
+### Table 2
+R1: NAME | POSITION | SIGNATURE / DATE
+R2: Abu Hurairah bin Abd. Manaf | Technical Project Manager Deputy Director Information Technology Division | 
+R3:  |  | 
+
+### Table 3
+R1: NAME | POSITION | SIGNATURE / DATE
+R2:  |  | 
+R3:  |  | 
+
+### Table 4
+R1: Version | Date | Prepared / Revised by | Summary of revision | Distribution list
+R2: 1.0 | 30 May 2026 | Ahmad Izzuddin Bin Ahmad Sakri | New submission of SRS | ITG, Functional Team, Technical Team
+R3:  |  | Tengku Zemy Azmira T Aziz |  | 
+R4:  |  |  |  | 
+R5:  |  |  |  | 
+R6:  |  |  |  | 
+R7:  |  |  |  | 
+R8:  |  |  |  | 
+R9:  |  |  |  | 
+R10:  |  |  |  | 
+R11:  |  |  |  | 
+
+### Table 5
+R1: ACTOR | DESCRIPTION
+R2: MSD Administor and KCDIOM Liason | Responsible for managing policy circulars, uploading documents, activating circulars and managing system access roles.
+R3: Staff/User | View and download policies and circulars
+R4: System | Handles automated processes such as storage, version control and archival activities.
+
+### Table 6
+R1: Module Name: Admin Module Business Function ID: HR-19-SF01 | Module Name: Admin Module Business Function ID: HR-19-SF01 | Module Name: Admin Module Business Function ID: HR-19-SF01 | Module Name: Admin Module Business Function ID: HR-19-SF01
+R2: No | Business Process ID | Activity Descriptions | System Actor
+R3: 1 | HR-19-SF01-BP01 | Manage document type & status | MSD Admin
+R4: 2 | HR-19-SF01-BP02 | Document Submission | MSD Admin
+R5: 3 | HR-19-SF01-BP03 | Manage Document Revision | MSD Admin
+
+### Table 7
+R1: Module Name: User Module Business Function ID: HR-19-SF02 | Module Name: User Module Business Function ID: HR-19-SF02 | Module Name: User Module Business Function ID: HR-19-SF02 | Module Name: User Module Business Function ID: HR-19-SF02
+R2: No | Business Process ID | Activity Descriptions | System Actor
+R3: 1 | HR-19-SF02-BP01 | View Document | Staff / User
+R4: 2 | HR-19-SF02-BP02 | Notification Email | System
+R5: 3 | HR-19-SF02-BP03 | Notification Portal | System / Staff
+
+### Table 8
+R1: Module Name: Reporting Dashboard Business Function ID: HR-19-SF03 | Module Name: Reporting Dashboard Business Function ID: HR-19-SF03 | Module Name: Reporting Dashboard Business Function ID: HR-19-SF03 | Module Name: Reporting Dashboard Business Function ID: HR-19-SF03
+R2: No | Business Process ID | Activity Descriptions | System Actor
+R3: 1 | HR-19-SF03-BP01 | Reporting and Dashboard | MSD Admin
+R4: 2 | HR-19-SF03-BP02 | Active Report List of Documents with Versions | MSD Admin
+R5: 3 | HR-19-SF02-BP03 | Submissions by KCD Charts | MSD Admin
+
+### Table 9
+R1: Module Name: User Access Business Function ID: HR-19-SF04 | Module Name: User Access Business Function ID: HR-19-SF04 | Module Name: User Access Business Function ID: HR-19-SF04 | Module Name: User Access Business Function ID: HR-19-SF04
+R2: No | Business Process ID | Activity Descriptions | System Actor
+R3: 1 | HR-19-SF03-BP01 | CAS submission | Staff / User
+R4: 2 | HR-19-SF03-BP02 | Role Assignment | MSD Admin
+
+### Table 10
+R1: No | Use Case ID | Use Case Name | Use Case Name | Descriptions
+R2: 1 | HR-19-SF01-BP01 | HR-19-SF01-BP01 | Manage Document Type & Status | Enables the MSD Admin to configure document rules and status values.
+R3: 2 | HR-19-SF01-BP02 | HR-19-SF01-BP02 | Document submission | Manage the formal intake newly approved files into the digital ecosystem repository.
+R4: 3 | HR-19-SF01-BP03 | HR-19-SF01-BP03 | Manage document revisions | Manage the system's underlying version control recognise historical audit tracking when old policies get replaced.
+
+### Table 11
+R1: No | Use Case ID | Use Case Name | Use Case Name | Descriptions
+R2: 1 | HR-19-SF02-BP01 | HR-19-SF02-BP01 | View Document | The system allows users to browse and read live published policies and circulars.
+R3: 2 | HR-19-SF02-BP02 | HR-19-SF02-BP02 | Notification Email | The system fires automated alert emails to target users when a new circular is published.
+R4: 3 | HR-19-SF02-BP03 | HR-19-SF02-BP03 | Notification Portal | The system displays localized push notifications and alert banners on the web dashboard.
+
+### Table 12
+R1: No | Use Case ID | Use Case Name | Use Case Name | Descriptions
+R2: 1 | HR-19-SF03-BP01 | HR-19-SF03-BP01 | CAS Submission | Displays high-level KPI dashboard counter cards tracking total documents.
+R3: 2 | HR-19-SF03-BP02 | HR-19-SF03-BP02 | Role Assignment | Generates a master list showing active items alongside their version history.
+R4: 3 | HR-19-SF03-BP03 | HR-19-SF03-BP03 | Submissions by KCD Charts | Renders visual analytics charts of submissions filtered by Kulliyyah/Centre/Division.
+
+### Table 13
+R1: No | ID | Use Case Name | Use Case Name | Descriptions
+R2: 1 | HR-19-SF04-BP01 | HR-19-SF04-BP01 | CAS Submission | Processes user login credentials and session verification via the Central Authentication Service.
+R3: 2 | HR-19-SF04-BP02 | HR-19-SF04-BP02 | Role Assignment | Allows the master administrator to map accounts to structural system roles and permissions.
