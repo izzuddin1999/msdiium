@@ -21,7 +21,7 @@ return new class extends Migration
                    name AS topic_name,
                    NULL AS description,
                    NULL AS category,
-                   CASE WHEN is_active = 1 THEN 'ACTIVE' ELSE 'INACTIVE' END AS status
+                   CASE WHEN is_active THEN 'ACTIVE' ELSE 'INACTIVE' END AS status
             FROM topic_categories
         SQL);
 
@@ -30,7 +30,7 @@ return new class extends Migration
             SELECT id AS sub_topic_id,
                    name AS sub_topic_name,
                    NULL AS description,
-                   CASE WHEN is_active = 1 THEN 'ACTIVE' ELSE 'INACTIVE' END AS status,
+                   CASE WHEN is_active THEN 'ACTIVE' ELSE 'INACTIVE' END AS status,
                    topic_category_id AS main_topic_id
             FROM topic_subtopics
         SQL);
@@ -72,12 +72,16 @@ return new class extends Migration
         SQL);
 
         $driver = DB::connection()->getDriverName();
-        $documentId = $driver === 'sqlite'
-            ? "json_extract(data, '$.document_id')"
-            : "JSON_UNQUOTE(JSON_EXTRACT(data, '$.document_id'))";
-        $message = $driver === 'sqlite'
-            ? "COALESCE(json_extract(data, '$.message'), data)"
-            : "COALESCE(JSON_UNQUOTE(JSON_EXTRACT(data, '$.message')), data)";
+        $documentId = match ($driver) {
+            'sqlite' => "json_extract(data, '$.document_id')",
+            'pgsql' => "data::jsonb ->> 'document_id'",
+            default => "JSON_UNQUOTE(JSON_EXTRACT(data, '$.document_id'))",
+        };
+        $message = match ($driver) {
+            'sqlite' => "COALESCE(json_extract(data, '$.message'), data)",
+            'pgsql' => "COALESCE(data::jsonb ->> 'message', data)",
+            default => "COALESCE(JSON_UNQUOTE(JSON_EXTRACT(data, '$.message')), data)",
+        };
 
         DB::statement("CREATE VIEW notification AS
             SELECT id AS notification_id,
