@@ -11,12 +11,49 @@
     @media(max-width:991px){.booklet-column{position:static;margin-top:18px}.booklet-shell iframe{height:640px!important}}
     @media(max-width:767px){.pdf-preview-card .card-header{align-items:flex-start!important;flex-direction:column}.pdf-preview-card .card-header .btn{width:100%}.pdf-viewer-shell{padding:5px}.booklet-shell{padding:13px 8px 13px 22px}.booklet-shell:before{left:7px;top:18px;bottom:18px;width:8px}.pdf-viewer-shell iframe,.booklet-shell iframe{height:480px!important}}
     .booklet-document-switcher{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px 13px;background:#f7fbfa;border-top:1px solid #e1ece9}.booklet-document-switcher label{display:flex;align-items:center;gap:5px;margin:0;color:#315c55;font-size:11px;font-weight:700;white-space:nowrap}.booklet-document-switcher label .material-icons,.booklet-document-switcher .btn .material-icons{font-size:17px}.booklet-document-switcher .form-select{min-width:0}.version-attachment-menu{min-width:145px}.version-attachment-menu summary{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:0;border-radius:7px;background:#55b8d4;color:#fff;font-size:11px;font-weight:750;cursor:pointer;list-style:none}.version-attachment-menu summary::-webkit-details-marker{display:none}.version-attachment-menu summary .material-icons{font-size:16px}.version-attachment-menu[open] summary{background:#238ead}.version-attachment-list{display:flex;flex-direction:column;gap:5px;width:260px;max-width:100%;margin-top:7px;padding:7px;border:1px solid #d9e7e3;border-radius:9px;background:#fff}.version-attachment-link{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:7px;align-items:center;padding:8px;border-radius:7px;background:#f6faf9;color:#244d46;font-size:11px}.version-attachment-link:hover{background:#e8f6f2;color:#007e73}.version-attachment-link .material-icons{font-size:17px;color:#d94343}.version-attachment-link span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.version-attachment-link .download-icon{color:#1683a2}.version-pdf-manager{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid #cfe2dd;border-radius:11px;background:#f3faf8}.version-pdf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px;border:1px solid #e3ece9;border-radius:9px;background:#fff;transition:.18s}.version-pdf-row:hover{border-color:#aed8d0;box-shadow:0 5px 13px rgba(20,76,66,.07)}.version-pdf-row.is-excluded{opacity:.58;background:#f3f4f4;border-style:dashed}.version-pdf-row .form-check{min-width:0;margin:0}.version-pdf-row .form-check-label{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;min-width:0}.version-pdf-row .form-check-label .material-icons{grid-row:1/3;flex:0 0 auto;color:#d94343;font-size:21px}.version-pdf-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#173e38;font-size:12px;font-weight:700}.version-pdf-state{color:#168276;font-size:10px;font-weight:700}.version-pdf-row.is-excluded .version-pdf-state{color:#8a9491}.version-pdf-actions{display:flex;gap:5px}.version-pdf-actions .btn{display:grid;place-items:center;width:30px;height:30px;padding:0;border-radius:7px}.version-pdf-actions .material-icons{font-size:16px}.version-pdf-help{color:#71847f;font-size:11px;line-height:1.4}.pdf-upload-zone{position:relative;padding:14px;border:1px dashed #9ecdc5;border-radius:10px;background:#f6fbfa;text-align:center}.pdf-upload-zone .material-icons{display:block;margin:auto;color:#008f85;font-size:30px}.pdf-upload-zone strong,.pdf-upload-zone small{display:block}.pdf-upload-zone strong{margin-top:3px;color:#214b44}.pdf-upload-zone small{color:#7b8d88}.pdf-upload-zone input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.selected-pdf-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}.selected-pdf-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:7px;align-items:center;padding:7px 9px;border-radius:7px;background:#edf7f4;color:#244b44;font-size:11px}.selected-pdf-item .material-icons{color:#d94343;font-size:17px}.selected-pdf-item span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selected-pdf-item button{display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:#fff;color:#d94343}.audit-toggle{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid #d6e6e2;border-radius:8px;background:#fff;color:#087d72;transition:.18s}.audit-toggle:hover{background:#e8f7f3;border-color:#99d5cc}.audit-toggle .material-icons{font-size:21px;transition:transform .2s}.audit-card.is-collapsed .audit-toggle .material-icons{transform:rotate(180deg)}.audit-card.is-collapsed .audit-card-body{display:none}.audit-card.is-collapsed .card-header{border-bottom:0}.audit-list{display:flex;flex-direction:column}.audit-entry{padding:16px 20px;border-bottom:1px solid #e5eeeb;background:#fff}.audit-entry:last-child{border-bottom:0}.audit-entry:nth-child(even){background:#fbfdfc}.audit-entry-head{display:grid;grid-template-columns:145px 95px minmax(140px,1fr);gap:14px;align-items:center;margin-bottom:12px}.audit-meta{min-width:0}.audit-meta small{display:block;margin-bottom:2px;color:#78908a;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.audit-meta strong{display:block;overflow-wrap:anywhere;color:#214a43;font-size:13px}.audit-action{display:inline-flex!important;width:max-content;padding:4px 9px;border-radius:16px;background:#e8f6f2;color:#087c70!important}.audit-entry-body{display:grid;grid-template-columns:minmax(180px,.7fr) minmax(0,1.3fr);gap:14px}.audit-section{min-width:0;padding:11px 12px;border:1px solid #e0ebe8;border-radius:9px;background:#f7fbfa}.audit-section-title{display:block;margin-bottom:7px;color:#6b837d;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.06em}.audit-fields{overflow-wrap:anywhere;color:#244c45;font-size:12px;line-height:1.55}.audit-old-values{display:flex;flex-direction:column;gap:6px;min-width:0}.audit-old-item{display:grid;grid-template-columns:minmax(85px,.55fr) minmax(0,1.45fr);gap:8px;align-items:start;padding:6px 8px;border-radius:6px;background:#fff;font-size:12px}.audit-old-item strong{overflow-wrap:anywhere;color:#58716b;font-size:10px;text-transform:uppercase;letter-spacing:.04em}.audit-old-item span{display:block;min-width:0;overflow-wrap:anywhere;color:#173e38;line-height:1.45}.audit-empty{color:#98a6a2;font-style:italic}@media(max-width:767px){.version-pdf-row{grid-template-columns:1fr}.version-pdf-actions{justify-content:flex-end}.audit-entry{padding:14px}.audit-entry-head,.audit-entry-body{grid-template-columns:1fr}.audit-entry-head{gap:8px}.audit-old-item{grid-template-columns:1fr}}
+    /* Reading workspace: compact metadata and give the controlled document priority. */
+    .staff-reading-layout{--reading-gap:18px;--detail-border:#dfeae7;display:flex;gap:var(--reading-gap);margin-right:0;margin-left:0}
+    .staff-reading-layout>[class*="col-"]{padding-right:0;padding-left:0}
+    .record-card .card-header{padding:13px 17px}
+    .record-card .card-body{padding:13px}
+    .record-card .card-body>.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important;margin:0}
+    .record-card .row>.col-md-6{width:auto;min-width:0;padding:9px 11px;border:1px solid var(--detail-border);border-radius:9px;background:linear-gradient(135deg,#f7fbfa,#fff)}
+    .record-card .row>.col-md-6 strong{margin-bottom:2px;font-size:9px;line-height:1.25;letter-spacing:.075em}
+    .record-card .row>.col-md-6>div{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+    .record-card .row>.col-12{grid-column:1/-1;width:auto;padding:3px 0}
+    .record-card .content-panel{max-height:145px;margin-top:3px!important;padding:11px 12px!important;overflow:auto;font-size:12px;line-height:1.5}
+    .record-card .content-panel strong{display:block;margin-bottom:4px;color:#627c76;font-size:9px;text-transform:uppercase;letter-spacing:.075em}
+    .booklet-column{flex:1 1 0;min-width:0}
+    .booklet-preview .card-header{padding:11px 13px!important}
+    .booklet-preview .card-header .btn{white-space:nowrap}
+    .booklet-shell{padding:13px 10px 13px 25px}
+    .booklet-shell iframe{height:min(75vh,790px)!important;min-height:660px}
+    @media(min-width:992px){
+        .staff-reading-layout>.col-lg-8{flex:0 0 calc(40% - (var(--reading-gap) / 2));max-width:calc(40% - (var(--reading-gap) / 2))}
+        .staff-reading-layout>.col-lg-4{flex:0 0 calc(60% - (var(--reading-gap) / 2));max-width:calc(60% - (var(--reading-gap) / 2))}
+    }
+    @media(max-width:1199px) and (min-width:992px){
+        .staff-reading-layout>.col-lg-8{flex-basis:calc(44% - (var(--reading-gap) / 2));max-width:calc(44% - (var(--reading-gap) / 2))}
+        .staff-reading-layout>.col-lg-4{flex-basis:calc(56% - (var(--reading-gap) / 2));max-width:calc(56% - (var(--reading-gap) / 2))}
+        .record-card .card-body>.row{grid-template-columns:1fr}
+        .record-card .row>.col-12{grid-column:1}
+    }
+    @media(max-width:991px){
+        .staff-reading-layout{display:block}
+        .staff-reading-layout>[class*="col-"]{width:100%;max-width:none}
+        .booklet-shell iframe{height:680px!important;min-height:0}
+    }
+    @media(max-width:575px){
+        .record-card .card-body>.row{grid-template-columns:1fr}
+        .record-card .row>.col-12{grid-column:1}
+        .booklet-shell iframe{height:500px!important}
+    }
     .footer{position:relative!important;clear:both!important;bottom:auto!important}
 </style>
 @php
     $displayTitle = trim($document->title, " -\t\n\r\0\x0B") !== '' ? $document->title : (($document->document_type === 'circular' ? 'Untitled Circular' : 'Untitled Document'));
     $pdfAttachments = $currentAttachments->filter(fn ($attachment) => strtolower(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) === 'pdf')->values();
-    $legacyPdfAvailable = $document->file_path && strtolower(pathinfo($document->file_original_name ?: $document->file_path, PATHINFO_EXTENSION)) === 'pdf';
+    $legacyPdfAvailable = $legacyPdfAllowed && $document->file_path && strtolower(pathinfo($document->file_original_name ?: $document->file_path, PATHINFO_EXTENSION)) === 'pdf';
     $canPreviewPdf = $legacyPdfAvailable || $pdfAttachments->isNotEmpty();
     $initialPdf = $pdfAttachments->first();
     $initialPreviewUrl = $initialPdf ? route('document-attachments.preview', $initialPdf) : route('policy-documents.preview', $document);
@@ -38,7 +75,7 @@
         <div class="hero-meta"><span class="hero-chip"><span class="material-icons">description</span>{{ ucfirst($document->document_type) }}</span><span class="hero-chip"><span class="material-icons">history</span>Version {{ $document->version_number }}</span><span class="hero-chip"><span class="material-icons">business</span>{{ strtoupper($document->owner_unit) }}</span><span class="hero-chip"><span class="material-icons">verified</span>{{ $document->statusLabel() }}</span></div>
     </div>
     <div class="document-actions">
-        @if($document->file_path)
+        @if($document->file_path && $legacyPdfAllowed)
             @if($canPreviewPdf)<a href="{{ $initialPreviewUrl }}" target="_blank" class="btn btn-light"><span class="material-icons">picture_as_pdf</span>Preview PDF</a>@endif
             <a href="{{ route('policy-documents.download', $document) }}" class="btn btn-light"><span class="material-icons">download</span>Download</a>
         @endif
@@ -353,7 +390,11 @@
             @if($canManageDocuments)
             <div class="card version-panel" id="new-version">
                 <div class="card-header">
-                    <h5 class="mb-0">Create New Version</h5>
+                    <div>
+                        <h5 class="mb-1">Create New Version</h5>
+                        <p class="mb-0 text-muted small">The current document details and classification will be carried forward automatically.</p>
+                    </div>
+                    <span class="badge bg-light text-dark">New version · Draft</span>
                 </div>
                 <form action="{{ route('policy-documents.versions.store', $document) }}" method="POST" enctype="multipart/form-data" id="newVersionForm" data-refresh-csrf>
                     @csrf
@@ -368,51 +409,6 @@
                         </div>
                     @endif
                     <div class="card-body row g-3">
-                        <div class="col-12">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-control" required>
-                                @foreach($documentStatuses as $status => $label)
-                                    <option value="{{ $status }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Creator</label>
-                            <select name="created_by" class="form-control">
-                                <option value="">Use current creator</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->actorLabel() }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Topic Category</label>
-                            <select name="topic_category" id="showMainTopic" class="form-control">
-                                <option value="">Use current category</option>
-                                @foreach($topicCategories as $slug => $label)
-                                    <option value="{{ $slug }}" @selected(old('topic_category') === $slug)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Subtopic</label>
-                            <select name="subtopic_id" id="showSubtopic" class="form-control">
-                                <option value="">Use current subtopic</option>
-                                @foreach($subtopics as $subtopic)
-                                    <option
-                                        value="{{ $subtopic->id }}"
-                                        data-main="{{ $subtopic->mainTopic?->slug }}"
-                                        @selected((int) old('subtopic_id') === $subtopic->id)
-                                    >
-                                        {{ $subtopic->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Updated Content</label>
-                            <textarea name="content" class="form-control" rows="4">{{ old('content', $document->content) }}</textarea>
-                        </div>
                         <div class="col-12">
                             <label class="form-label">Revision Summary</label>
                             <textarea name="revision_summary" class="form-control" rows="3" placeholder="Explain what changed in this new version.">{{ old('revision_summary') }}</textarea>
@@ -619,29 +615,6 @@
             });
         });
 
-        const mainSelect = document.getElementById('showMainTopic');
-        const subSelect = document.getElementById('showSubtopic');
-        if (!mainSelect || !subSelect) {
-            return;
-        }
-
-        const filterSubtopics = () => {
-            const selectedMain = mainSelect.value;
-            Array.from(subSelect.options).forEach((option, index) => {
-                if (index === 0) {
-                    option.hidden = false;
-                    return;
-                }
-                option.hidden = selectedMain !== '' && option.dataset.main !== selectedMain;
-            });
-
-            const currentOption = subSelect.options[subSelect.selectedIndex];
-            if (currentOption && currentOption.hidden) {
-                subSelect.value = '';
-            }
-        };
-
-        mainSelect.addEventListener('change', filterSubtopics);
         filterSubtopics();
     })();
 </script>

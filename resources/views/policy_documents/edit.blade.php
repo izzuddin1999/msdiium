@@ -16,8 +16,28 @@
     .edit-workspace .form-section-title h6{margin:0 0 2px;color:#103e37;font-size:15px;font-weight:750}.edit-workspace .form-section-title small{color:#71847f;font-size:12px}
     .edit-workspace .form-label{margin-bottom:5px;color:#183d38;font-size:12px;font-weight:700}.edit-workspace .form-control{min-height:44px;border-color:#d5e2df;border-radius:9px;background:#fff;font-size:13px}.edit-workspace .form-control:focus{border-color:#009c92;box-shadow:0 0 0 3px rgba(0,156,146,.12)}
     .edit-workspace .option-tile{min-height:44px;padding:11px 14px;border:1px solid #d5e2df;border-radius:9px;background:#f7fbfa}.edit-workspace .option-tile .form-check{margin:0}
+    .edit-pdf-uploader{padding:14px;border:1px dashed #8fc9c0;border-radius:12px;background:linear-gradient(135deg,#f1faf8,#fff)}
+    .edit-pdf-picker{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;min-height:64px;padding:12px;border:1px solid #d7e8e4;border-radius:9px;background:#fff;color:#24534c;text-align:center;cursor:pointer;transition:.18s}
+    .edit-pdf-picker:hover,.edit-pdf-picker.is-dragging{border-color:#009c92;background:#edfaf7;box-shadow:0 0 0 3px rgba(0,156,146,.09)}
+    .edit-pdf-picker .material-icons{color:#d94343;font-size:27px}.edit-pdf-picker strong,.edit-pdf-picker small{display:block}.edit-pdf-picker small{margin-top:2px;color:#7b8d88}
+    .edit-pdf-picker input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+    .edit-pdf-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+    .edit-pdf-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid #dfebe8;border-radius:8px;background:#fff}
+    .edit-pdf-item>.material-icons{color:#d94343;font-size:20px}.edit-pdf-item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#173e38;font-size:11px;font-weight:700}.edit-pdf-item-size{display:block;color:#82918d;font-size:9px;font-weight:500}
+    .edit-pdf-remove{display:grid;place-items:center;width:27px;height:27px;padding:0;border:0;border-radius:7px;background:#fff0f0;color:#d94343}.edit-pdf-remove .material-icons{font-size:16px}
+    .edit-pdf-summary{display:none;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid #dfeae7;color:#55736d;font-size:11px}.edit-pdf-summary.is-visible{display:flex}.edit-pdf-summary strong{color:#087c70}
+    .edit-pdf-error{display:none;margin-top:8px;color:#b93939;font-size:11px;font-weight:650}.edit-pdf-error.is-visible{display:block}
+    .uploaded-pdf-register{overflow:hidden;border:1px solid #d8e7e3;border-radius:12px;background:#f8fbfa}
+    .uploaded-pdf-register-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid #dfeae7;background:#edf7f5}
+    .uploaded-pdf-register-head strong{color:#174b43;font-size:13px}.uploaded-pdf-register-head span{color:#71847f;font-size:10px}
+    .uploaded-pdf-row{display:grid;grid-template-columns:minmax(0,1fr) 132px auto;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #e4ecea}.uploaded-pdf-row:last-child{border-bottom:0}
+    .uploaded-pdf-file{display:flex;align-items:center;gap:9px;min-width:0}.uploaded-pdf-file>.material-icons{flex:0 0 auto;color:#d94343;font-size:23px}
+    .uploaded-pdf-file strong,.uploaded-pdf-file small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.uploaded-pdf-file strong{color:#173e38;font-size:11px}.uploaded-pdf-file small{margin-top:2px;color:#83928e;font-size:9px}
+    .attachment-visibility{min-height:36px!important;padding:6px 9px!important;font-size:11px!important}
+    .uploaded-pdf-actions{display:flex;gap:5px}.uploaded-pdf-actions .btn{display:grid;place-items:center;width:32px;height:32px;padding:0}.uploaded-pdf-actions .material-icons{font-size:16px}
+    .new-pdf-options{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 0}.new-pdf-options label{margin:0;color:#365f58;font-size:11px;font-weight:700}.new-pdf-options select{width:170px;min-height:36px!important}
     .edit-workspace .card-footer{position:sticky;bottom:0;z-index:5;padding:14px 24px;background:rgba(247,250,249,.96);backdrop-filter:blur(10px);border-top:1px solid #dce8e4;box-shadow:0 -8px 24px rgba(21,65,56,.07)}.edit-workspace .card-footer .btn{min-height:42px;padding:9px 20px;border-radius:9px;font-weight:700}
-    @media(max-width:767px){.edit-workspace-bar{align-items:flex-start;flex-direction:column}.edit-workspace .card-body{padding:16px}.record-chip{display:none}}
+    @media(max-width:767px){.edit-workspace-bar{align-items:flex-start;flex-direction:column}.edit-workspace .card-body{padding:16px}.record-chip{display:none}.edit-pdf-list{grid-template-columns:1fr}.uploaded-pdf-row{grid-template-columns:minmax(0,1fr) auto}.uploaded-pdf-row>.attachment-visibility{grid-column:1/-1;grid-row:2}.new-pdf-options{align-items:flex-start;flex-direction:column}.new-pdf-options select{width:100%}}
 </style>
 
 <form action="{{ route('policy-documents.update', $document) }}" method="POST" enctype="multipart/form-data" class="card edit-workspace">
@@ -128,9 +148,56 @@
         </div>
 
         <div class="col-12">
+            <label class="form-label">Uploaded PDF Documents</label>
+            <div class="uploaded-pdf-register">
+                <div class="uploaded-pdf-register-head">
+                    <strong>{{ $currentAttachments->count() }} {{ Str::plural('PDF', $currentAttachments->count()) }} attached to Version {{ $document->version_number }}</strong>
+                    <span>Choose who can open each file</span>
+                </div>
+                @forelse($currentAttachments as $attachment)
+                    <div class="uploaded-pdf-row">
+                        <div class="uploaded-pdf-file">
+                            <span class="material-icons">picture_as_pdf</span>
+                            <span>
+                                <strong title="{{ $attachment->file_name }}">{{ $attachment->file_name }}</strong>
+                                <small>{{ $attachment->file_size ? number_format($attachment->file_size / 1024, 1).' KB' : 'PDF document' }}</small>
+                            </span>
+                        </div>
+                        <select name="attachment_visibility[{{ $attachment->id }}]" class="form-control attachment-visibility" aria-label="Visibility for {{ $attachment->file_name }}">
+                            <option value="public" @selected(old("attachment_visibility.{$attachment->id}", $attachment->is_public ? 'public' : 'internal') === 'public')>Public</option>
+                            <option value="internal" @selected(old("attachment_visibility.{$attachment->id}", $attachment->is_public ? 'public' : 'internal') === 'internal')>Internal only</option>
+                        </select>
+                        <div class="uploaded-pdf-actions">
+                            <a href="{{ route('document-attachments.preview', $attachment) }}" target="_blank" class="btn btn-outline-info" title="Preview PDF"><span class="material-icons">visibility</span></a>
+                            <a href="{{ route('document-attachments.download', $attachment) }}" class="btn btn-outline-secondary" title="Download PDF"><span class="material-icons">download</span></a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-3 text-center text-muted small">No PDF has been uploaded for this version.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="col-12">
             <label class="form-label">Add PDF Documents</label>
-            <input type="file" name="files[]" class="form-control" accept="application/pdf,.pdf" multiple>
-            <small class="text-muted d-block">PDF only. Select up to 10 documents (maximum 3 MB each).</small>
+            <div class="edit-pdf-uploader">
+                <label class="edit-pdf-picker" id="editPdfPicker">
+                    <span class="material-icons">picture_as_pdf</span>
+                    <span><strong>Add one or more PDFs</strong><small>Choose several files together, or return to add more</small></span>
+                    <input type="file" name="files[]" id="editPdfFiles" accept="application/pdf,.pdf" multiple>
+                </label>
+                <div class="edit-pdf-list" id="editPdfList" aria-live="polite"></div>
+                <div class="edit-pdf-summary" id="editPdfSummary"><span><strong id="editPdfCount">0</strong> of 10 PDFs selected</span><span id="editPdfTotal">0 MB total</span></div>
+                <div class="edit-pdf-error" id="editPdfError" role="alert"></div>
+                <div class="new-pdf-options">
+                    <label for="newAttachmentVisibility">Visibility for newly uploaded PDFs</label>
+                    <select name="new_attachment_visibility" id="newAttachmentVisibility" class="form-control">
+                        <option value="internal" @selected(old('new_attachment_visibility', 'internal') === 'internal')>Internal only</option>
+                        <option value="public" @selected(old('new_attachment_visibility') === 'public')>Public</option>
+                    </select>
+                </div>
+            </div>
+            <small class="text-muted d-block mt-1">PDF only. Select up to 10 documents (maximum 3 MB each). New selections are added to the queue.</small>
             @if($document->file_path)
                 <small class="text-muted">Primary document: {{ $document->file_original_name }}</small>
             @endif
@@ -178,6 +245,91 @@
         mainSelect.addEventListener('change', filterSubtopics);
         subSelect.addEventListener('change', filterTopicDetails);
         filterSubtopics();
+
+        const pdfInput = document.getElementById('editPdfFiles');
+        const pdfList = document.getElementById('editPdfList');
+        const pdfSummary = document.getElementById('editPdfSummary');
+        const pdfCount = document.getElementById('editPdfCount');
+        const pdfTotal = document.getElementById('editPdfTotal');
+        const pdfError = document.getElementById('editPdfError');
+        const pdfPicker = document.getElementById('editPdfPicker');
+        const queuedPdfs = new Map();
+        const fileKey = (file) => `${file.name}:${file.size}:${file.lastModified}`;
+
+        const formatSize = (bytes) => bytes < 1048576
+            ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+            : `${(bytes / 1048576).toFixed(2)} MB`;
+
+        const syncPdfInput = () => {
+            const transfer = new DataTransfer();
+            queuedPdfs.forEach((file) => transfer.items.add(file));
+            pdfInput.files = transfer.files;
+        };
+
+        const renderPdfQueue = () => {
+            pdfList.innerHTML = '';
+            let totalBytes = 0;
+            queuedPdfs.forEach((file, key) => {
+                totalBytes += file.size;
+                const item = document.createElement('div');
+                item.className = 'edit-pdf-item';
+                const icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.textContent = 'picture_as_pdf';
+                const name = document.createElement('span');
+                name.className = 'edit-pdf-item-name';
+                name.title = file.name;
+                name.textContent = file.name;
+                const size = document.createElement('small');
+                size.className = 'edit-pdf-item-size';
+                size.textContent = formatSize(file.size);
+                name.appendChild(size);
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'edit-pdf-remove';
+                remove.setAttribute('aria-label', `Remove ${file.name}`);
+                const removeIcon = document.createElement('span');
+                removeIcon.className = 'material-icons';
+                removeIcon.textContent = 'close';
+                remove.appendChild(removeIcon);
+                remove.addEventListener('click', () => {
+                    queuedPdfs.delete(key);
+                    syncPdfInput();
+                    renderPdfQueue();
+                });
+                item.append(icon, name, remove);
+                pdfList.appendChild(item);
+            });
+            pdfCount.textContent = queuedPdfs.size;
+            pdfTotal.textContent = `${(totalBytes / 1048576).toFixed(2)} MB total`;
+            pdfSummary.classList.toggle('is-visible', queuedPdfs.size > 0);
+        };
+
+        pdfInput?.addEventListener('change', () => {
+            pdfError.classList.remove('is-visible');
+            const incoming = Array.from(pdfInput.files || []);
+            const problems = [];
+            incoming.forEach((file) => {
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    problems.push(`${file.name} is not a PDF.`);
+                } else if (file.size > 3 * 1024 * 1024) {
+                    problems.push(`${file.name} exceeds 3 MB.`);
+                } else if (!queuedPdfs.has(fileKey(file)) && queuedPdfs.size < 10) {
+                    queuedPdfs.set(fileKey(file), file);
+                } else if (!queuedPdfs.has(fileKey(file))) {
+                    problems.push('Only 10 PDFs can be uploaded at once.');
+                }
+            });
+            syncPdfInput();
+            renderPdfQueue();
+            if (problems.length) {
+                pdfError.textContent = problems.join(' ');
+                pdfError.classList.add('is-visible');
+            }
+        });
+
+        ['dragenter', 'dragover'].forEach((eventName) => pdfPicker?.addEventListener(eventName, () => pdfPicker.classList.add('is-dragging')));
+        ['dragleave', 'drop'].forEach((eventName) => pdfPicker?.addEventListener(eventName, () => pdfPicker.classList.remove('is-dragging')));
     })();
 </script>
 @endsection

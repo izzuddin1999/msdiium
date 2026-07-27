@@ -473,6 +473,56 @@ class ManagementPagesTest extends TestCase
             ->assertHeader('content-type', 'application/pdf');
     }
 
+    public function test_attachment_visibility_controls_public_access_but_keeps_internal_staff_access(): void
+    {
+        Storage::fake('public');
+        $manager = User::factory()->create(['role' => 'policy_manager', 'unit' => 'msd', 'is_active' => true]);
+        $staff = User::factory()->create(['role' => 'staff_user', 'unit' => 'msd', 'is_active' => true]);
+        $document = PolicyDocument::create([
+            'title' => 'Mixed Visibility Policy', 'document_type' => 'policy', 'content' => 'Published content',
+            'access_scope' => 'all', 'public_flag' => true, 'owner_unit' => 'msd', 'status' => 'published',
+            'version_number' => 1, 'created_by' => $manager->id, 'published_at' => now(),
+        ]);
+        $history = $document->histories()->firstOrFail();
+        Storage::disk('public')->put('policy-documents/public.pdf', '%PDF public');
+        Storage::disk('public')->put('policy-documents/internal.pdf', '%PDF internal');
+        $publicPdf = DocumentAttachment::create([
+            'policy_document_id' => $document->id, 'document_history_id' => $history->id,
+            'file_name' => 'public.pdf', 'file_path' => 'policy-documents/public.pdf',
+            'file_type' => 'application/pdf', 'is_public' => true, 'uploaded_by' => $manager->id,
+        ]);
+        $internalPdf = DocumentAttachment::create([
+            'policy_document_id' => $document->id, 'document_history_id' => $history->id,
+            'file_name' => 'internal.pdf', 'file_path' => 'policy-documents/internal.pdf',
+            'file_type' => 'application/pdf', 'is_public' => false, 'uploaded_by' => $manager->id,
+        ]);
+
+        $this->get(route('document-attachments.preview', $publicPdf))->assertOk();
+        $this->get(route('document-attachments.preview', $internalPdf))->assertNotFound();
+        $this->actingAs($staff)->get(route('document-attachments.preview', $internalPdf))->assertOk();
+        $this->actingAs($manager)->get(route('policy-documents.edit', $document))
+            ->assertOk()
+            ->assertSee('Uploaded PDF Documents')
+            ->assertSee('Public')
+            ->assertSee('Internal only');
+
+        $this->actingAs($manager)->put(route('policy-documents.update', $document), [
+            'title' => $document->title,
+            'document_type' => 'policy',
+            'content' => $document->content,
+            'access_scope' => 'all',
+            'public_flag' => 1,
+            'status' => 'published',
+            'attachment_visibility' => [
+                $publicPdf->id => 'internal',
+                $internalPdf->id => 'public',
+            ],
+        ])->assertRedirect(route('policy-documents.show', $document));
+
+        $this->assertFalse($publicPdf->fresh()->is_public);
+        $this->assertTrue($internalPdf->fresh()->is_public);
+    }
+
     public function test_version_flow_can_retain_exclude_and_delete_draft_pdfs(): void
     {
         Storage::fake('public');
@@ -489,10 +539,13 @@ class ManagementPagesTest extends TestCase
         DocumentAttachment::create(['policy_document_id' => $document->id, 'document_history_id' => $history->id, 'file_name' => 'exclude.pdf', 'file_path' => 'policy-documents/exclude.pdf', 'file_type' => 'application/pdf', 'security_status' => 'validated', 'uploaded_by' => $manager->id]);
 
         $this->actingAs($manager)->post(route('policy-documents.versions.store', $document), [
-            'status' => 'draft', 'attachments_reviewed' => 1, 'retain_attachment_ids' => [$keep->id],
+            'attachments_reviewed' => 1, 'retain_attachment_ids' => [$keep->id],
         ])->assertRedirect(route('policy-documents.show', $document));
 
         $newVersion = PolicyDocument::where('parent_document_id', $document->id)->firstOrFail();
+        $this->assertSame('draft', $newVersion->status);
+        $this->assertSame($document->content, $newVersion->content);
+        $this->assertSame($document->created_by, $newVersion->created_by);
         $newHistory = DocumentHistory::where('policy_document_id', $document->id)->where('version_number', 2)->firstOrFail();
         $copied = DocumentAttachment::where('document_history_id', $newHistory->id)->sole();
         $this->assertSame('keep.pdf', $copied->file_name);
@@ -1501,6 +1554,27 @@ class ManagementPagesTest extends TestCase
                 ->assertDontSee('Document Audit Log')
                 ->assertDontSee('CAS/HURIS Sync');
         }
+    }
+
+    public function test_kcdiom_liaison_dashboard_explains_the_shared_workflow_without_admin_actions(): void
+    {
+        $liaison = User::factory()->create([
+            'name' => 'KCDIOM Liaison',
+            'role' => 'policy_manager',
+            'unit' => 'kcdiom',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($liaison)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('KCDIOM Liaison Dashboard')
+            ->assertSee('One governed workflow for MSD and KCDIOM')
+            ->assertSee('Register')
+            ->assertSee('Maintain')
+            ->assertSee('Publish & monitor', false)
+            ->assertSee('Classify documents')
+            ->assertDontSee('Manage access');
     }
 
     public function test_manager_can_delete_document_without_newer_versions(): void

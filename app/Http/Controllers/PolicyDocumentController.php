@@ -48,11 +48,23 @@ class PolicyDocumentController extends Controller
                 }
             });
         };
-        $query = PolicyDocument::with(['creator', 'subtopic.mainTopic', 'formResponses.template'])
+        $query = PolicyDocument::with(['creator', 'subtopic.mainTopic', 'topicDetail', 'formResponses.template'])
             ->visibleTo($viewer)
             ->tap($latestInFamily)
             ->latest();
         $visibleDocuments = PolicyDocument::query()->visibleTo($viewer)->tap($latestInFamily);
+
+        if ($request->filled('unit') && in_array($request->string('unit')->toString(), ['msd', 'kcdiom'], true)) {
+            $unit = $request->string('unit')->toString();
+            $query->where('owner_unit', $unit);
+            $visibleDocuments->where('owner_unit', $unit);
+        }
+
+        if ($request->boolean('public')) {
+            $query->where('public_flag', true);
+            $visibleDocuments->where('public_flag', true);
+        }
+
         $repositoryStats = [
             'total' => (clone $visibleDocuments)->count(),
             'published' => (clone $visibleDocuments)->where('status', 'published')->count(),
@@ -90,6 +102,26 @@ class PolicyDocumentController extends Controller
 
         $documents = $this->decoratePaginator($query->paginate(12)->withQueryString());
         $this->attachVersionFamilies($documents->getCollection(), $viewer);
+        $showMsdDashboard = $request->string('unit')->toString() === 'msd' && ! $canManageDocuments;
+        $msdTopicDashboard = $showMsdDashboard
+            ? TopicCategory::query()
+                ->where('is_active', true)
+                ->with([
+                    'subtopics' => fn ($topicQuery) => $topicQuery
+                        ->where('is_active', true)
+                        ->withCount(['details' => fn ($detailQuery) => $detailQuery->where('is_active', true)])
+                        ->orderBy('name'),
+                ])
+                ->withCount([
+                    'documents as accessible_documents_count' => fn ($documentQuery) => $documentQuery
+                        ->visibleTo($viewer)
+                        ->where('owner_unit', 'msd')
+                        ->where('status', 'published')
+                        ->tap($latestInFamily),
+                ])
+                ->orderBy('name')
+                ->get()
+            : collect();
 
         return view('policy_documents.index', [
             'documents' => $documents,
@@ -100,6 +132,8 @@ class PolicyDocumentController extends Controller
             'documentTypes' => $this->lookupOptions('DOCUMENT_TYPE', ['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular']),
             'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
             'repositoryStats' => $repositoryStats,
+            'showMsdDashboard' => $showMsdDashboard,
+            'msdTopicDashboard' => $msdTopicDashboard,
             'formTemplates' => config('features.form_builder') ? FormTemplate::where('is_active', true)->orderBy('name')->get(['id', 'name']) : collect(),
         ]);
     }
@@ -226,8 +260,16 @@ class PolicyDocumentController extends Controller
         $currentAttachments = DocumentAttachment::with(['uploader', 'history'])
             ->where('policy_document_id', $rootId)
             ->when($currentHistory, fn ($query) => $query->where('document_history_id', $currentHistory->id))
+            ->when(! ($viewer?->is_active ?? false), fn ($query) => $query->where('is_public', true))
             ->orderBy('id')
             ->get();
+        $primaryAttachment = $policyDocument->file_path
+            ? DocumentAttachment::query()
+                ->where('policy_document_id', $rootId)
+                ->where('file_path', $policyDocument->file_path)
+                ->latest('id')
+                ->first()
+            : null;
         $versions = $this->decorateCollection($versions);
         $policyDocument = $this->decorateDocument($policyDocument);
 
@@ -239,9 +281,20 @@ class PolicyDocumentController extends Controller
             'canPublishDocument' => $this->canPublishDocument($viewer, $policyDocument),
             'topicCategories' => $this->topicCategoryOptions(),
             'subtopics' => $this->subtopicOptions(),
-            'normalizedHistories' => DocumentHistory::with(['creator', 'attachments'])->where('policy_document_id', $rootId)->orderByDesc('version_number')->get(),
-            'normalizedAttachments' => DocumentAttachment::with(['uploader', 'history'])->where('policy_document_id', $rootId)->latest()->get(),
+            'normalizedHistories' => DocumentHistory::with([
+                'creator',
+                'attachments' => fn ($query) => $query->when(
+                    ! ($viewer?->is_active ?? false),
+                    fn ($attachmentQuery) => $attachmentQuery->where('is_public', true)
+                ),
+            ])->where('policy_document_id', $rootId)->orderByDesc('version_number')->get(),
+            'normalizedAttachments' => DocumentAttachment::with(['uploader', 'history'])
+                ->where('policy_document_id', $rootId)
+                ->when(! ($viewer?->is_active ?? false), fn ($query) => $query->where('is_public', true))
+                ->latest()
+                ->get(),
             'currentAttachments' => $currentAttachments,
+            'legacyPdfAllowed' => ! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->is_active ?? false),
             'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
         ]);
     }
@@ -252,6 +305,12 @@ class PolicyDocumentController extends Controller
 
         abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
         abort_unless($policyDocument->file_path, 404);
+        $primaryAttachment = DocumentAttachment::query()
+            ->where('policy_document_id', $policyDocument->parent_document_id ?: $policyDocument->id)
+            ->where('file_path', $policyDocument->file_path)
+            ->latest('id')
+            ->first();
+        abort_unless(! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->is_active ?? false), 404);
         abort_unless(Storage::disk('public')->exists($policyDocument->file_path), 404);
 
         return Storage::disk('public')->download(
@@ -266,6 +325,12 @@ class PolicyDocumentController extends Controller
 
         abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
         abort_unless($policyDocument->file_path, 404);
+        $primaryAttachment = DocumentAttachment::query()
+            ->where('policy_document_id', $policyDocument->parent_document_id ?: $policyDocument->id)
+            ->where('file_path', $policyDocument->file_path)
+            ->latest('id')
+            ->first();
+        abort_unless(! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->is_active ?? false), 404);
         abort_unless(Storage::disk('public')->exists($policyDocument->file_path), 404);
 
         $fileName = $policyDocument->file_original_name ?: basename($policyDocument->file_path);
@@ -286,6 +351,7 @@ class PolicyDocumentController extends Controller
         $documentAttachment->loadMissing('history');
 
         abort_unless($this->canViewDocument($viewer, $document), 404);
+        abort_unless($documentAttachment->is_public || ($viewer?->is_active ?? false), 404);
         if (! ($viewer?->canManagePolicies() ?? false) && $documentAttachment->history) {
             abort_unless($documentAttachment->history->status === 'published', 404);
         }
@@ -310,6 +376,7 @@ class PolicyDocumentController extends Controller
         $documentAttachment->loadMissing('history');
 
         abort_unless($this->canViewDocument($viewer, $document), 404);
+        abort_unless($documentAttachment->is_public || ($viewer?->is_active ?? false), 404);
         if (! ($viewer?->canManagePolicies() ?? false) && $documentAttachment->history) {
             abort_unless($documentAttachment->history->status === 'published', 404);
         }
@@ -405,8 +472,19 @@ class PolicyDocumentController extends Controller
         $this->ensureCanManageDocuments($viewer);
         abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
 
+        $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
+        $historyId = DocumentHistory::query()
+            ->where('policy_document_id', $rootId)
+            ->where('version_number', $policyDocument->version_number)
+            ->value('id');
+
         return view('policy_documents.edit', [
             'document' => $policyDocument,
+            'currentAttachments' => DocumentAttachment::query()
+                ->where('policy_document_id', $rootId)
+                ->when($historyId, fn ($query) => $query->where('document_history_id', $historyId))
+                ->orderBy('file_name')
+                ->get(),
             'users' => $this->editableCreators(),
             'topicCategories' => $this->topicCategoryOptions(),
             'subtopics' => $this->subtopicOptions(),
@@ -441,6 +519,9 @@ class PolicyDocumentController extends Controller
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => ['file', 'mimes:pdf', 'max:3072'],
+            'new_attachment_visibility' => ['nullable', Rule::in(['public', 'internal'])],
+            'attachment_visibility' => ['nullable', 'array'],
+            'attachment_visibility.*' => [Rule::in(['public', 'internal'])],
         ]);
 
         $this->ensureOwnerUnitAccess($viewer, $policyDocument->owner_unit);
@@ -461,7 +542,12 @@ class PolicyDocumentController extends Controller
         $data['published_by'] = $data['status'] === 'published' ? ($policyDocument->published_by ?? $viewer?->id) : null;
 
         $policyDocument->update($data);
-        $this->recordAttachments($policyDocument, $uploadedFiles);
+        $this->recordAttachments(
+            $policyDocument,
+            $uploadedFiles,
+            $request->input('new_attachment_visibility', 'internal') === 'public'
+        );
+        $this->updateAttachmentVisibility($policyDocument, $request->input('attachment_visibility', []));
 
         return redirect()->route('policy-documents.show', $policyDocument)->with('status', 'Record updated successfully.');
     }
@@ -502,16 +588,11 @@ class PolicyDocumentController extends Controller
         abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
 
         $data = $request->validate([
-            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
-            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
-            'content' => ['nullable', 'string'],
             'revision_summary' => ['nullable', 'string', 'max:1000'],
             'effective_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
             'remarks' => ['nullable', 'string', 'max:2000'],
-            'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
             'is_circular' => ['nullable', 'boolean'],
-            'created_by' => $this->creatorValidationRules(),
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => ['file', 'mimes:pdf', 'max:3072'],
@@ -521,8 +602,8 @@ class PolicyDocumentController extends Controller
         ]);
 
         $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
-        $selectedMainTopic = $data['topic_category'] ?? $policyDocument->topic_category;
-        $selectedSubtopic = $data['subtopic_id'] ?? $policyDocument->subtopic_id;
+        $selectedMainTopic = $policyDocument->topic_category;
+        $selectedSubtopic = $policyDocument->subtopic_id;
         $this->ensureSubtopicMatchesMainTopic($selectedMainTopic, $selectedSubtopic);
 
         $latestVersion = PolicyDocument::where(function ($q) use ($rootId): void {
@@ -549,7 +630,7 @@ class PolicyDocumentController extends Controller
             'topic_category' => $selectedMainTopic,
             'subtopic_id' => $selectedSubtopic,
             'topic_detail_id' => $policyDocument->topic_detail_id,
-            'content' => $data['content'] ?? $policyDocument->content,
+            'content' => $policyDocument->content,
             'revision_summary' => $data['revision_summary'] ?? null,
             'reference_number' => null,
             'effective_date' => $data['effective_date'] ?? $policyDocument->effective_date,
@@ -559,13 +640,13 @@ class PolicyDocumentController extends Controller
             'public_flag' => $policyDocument->public_flag,
             'owner_unit' => $policyDocument->owner_unit,
             'owner_report' => $policyDocument->owner_report,
-            'status' => $data['status'],
+            'status' => 'draft',
             'is_circular' => (bool) ($data['is_circular'] ?? $policyDocument->is_circular),
             'version_number' => ($latestVersion ?? 1) + 1,
             'parent_document_id' => $rootId,
-            'created_by' => $data['created_by'] ?? $policyDocument->created_by,
-            'published_at' => $data['status'] === 'published' ? now() : null,
-            'published_by' => $data['status'] === 'published' ? $viewer?->id : null,
+            'created_by' => $policyDocument->created_by,
+            'published_at' => null,
+            'published_by' => null,
         ];
 
         $uploadedFiles = $this->storePdfUploads($request);
@@ -936,12 +1017,13 @@ class PolicyDocumentController extends Controller
         ])->values()->all();
     }
 
-    private function recordAttachments(PolicyDocument $document, array $uploads): void
+    private function recordAttachments(PolicyDocument $document, array $uploads, ?bool $isPublic = null): void
     {
         if ($uploads === []) {
             return;
         }
 
+        $isPublic ??= (bool) $document->public_flag;
         $rootId = $document->parent_document_id ?: $document->id;
         $history = DocumentHistory::where('policy_document_id', $rootId)
             ->where('version_number', $document->version_number)
@@ -961,6 +1043,7 @@ class PolicyDocumentController extends Controller
                 'file_type' => $file->getClientMimeType(),
                 'checksum_sha256' => hash('sha256', Storage::disk('public')->get($storedPath)),
                 'security_status' => 'validated',
+                'is_public' => $isPublic,
                 'uploaded_by' => auth()->id(),
             ]);
         }
@@ -988,9 +1071,34 @@ class PolicyDocumentController extends Controller
                 'file_type' => $attachment->file_type,
                 'checksum_sha256' => $attachment->checksum_sha256,
                 'security_status' => $attachment->security_status,
+                'is_public' => $attachment->is_public,
                 'integrity_verified_at' => $attachment->integrity_verified_at,
                 'uploaded_by' => $attachment->uploaded_by,
             ]);
         }
+    }
+
+    private function updateAttachmentVisibility(PolicyDocument $document, array $visibility): void
+    {
+        if ($visibility === []) {
+            return;
+        }
+
+        $rootId = $document->parent_document_id ?: $document->id;
+        $historyId = DocumentHistory::query()
+            ->where('policy_document_id', $rootId)
+            ->where('version_number', $document->version_number)
+            ->value('id');
+
+        DocumentAttachment::query()
+            ->where('policy_document_id', $rootId)
+            ->when($historyId, fn ($query) => $query->where('document_history_id', $historyId))
+            ->whereIn('id', array_keys($visibility))
+            ->get()
+            ->each(function (DocumentAttachment $attachment) use ($visibility): void {
+                $attachment->update([
+                    'is_public' => ($visibility[$attachment->id] ?? 'internal') === 'public',
+                ]);
+            });
     }
 }
