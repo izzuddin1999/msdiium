@@ -6,13 +6,14 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ViewerSessionController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', Rule::exists(User::class, 'id')],
         ]);
 
         $viewer = User::query()
