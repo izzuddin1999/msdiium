@@ -48,7 +48,13 @@ class PolicyDocumentController extends Controller
                 }
             });
         };
-        $query = PolicyDocument::with(['creator', 'subtopic.mainTopic', 'topicDetail', 'formResponses.template'])
+        $relations = ['creator', 'subtopic.mainTopic', 'topicDetail'];
+
+        if (config('features.form_builder')) {
+            $relations[] = 'formResponses.template';
+        }
+
+        $query = PolicyDocument::with($relations)
             ->visibleTo($viewer)
             ->tap($latestInFamily)
             ->latest();
@@ -252,7 +258,13 @@ class PolicyDocumentController extends Controller
             ->get();
 
         $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
-        $policyDocument->load(['creator', 'publisher', 'updater', 'subtopic.mainTopic', 'activityLogs.user', 'formResponses.template.fields']);
+        $relations = ['creator', 'publisher', 'updater', 'subtopic.mainTopic', 'activityLogs.user'];
+
+        if (config('features.form_builder')) {
+            $relations[] = 'formResponses.template.fields';
+        }
+
+        $policyDocument->load($relations);
         $currentHistory = DocumentHistory::query()
             ->where('policy_document_id', $rootId)
             ->where('version_number', $policyDocument->version_number)
