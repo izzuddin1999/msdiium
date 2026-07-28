@@ -39,7 +39,7 @@ class PolicyDocumentController extends Controller
         $latestInFamily = function ($query) use ($canManageDocuments): void {
             $query->whereNotExists(function ($newer) use ($canManageDocuments): void {
                 $newer->selectRaw('1')
-                    ->from('policy_documents as newer')
+                    ->from((new PolicyDocument)->getTable().' as newer')
                     ->whereRaw('COALESCE(newer.parent_document_id, newer.id) = COALESCE(policy_documents.parent_document_id, policy_documents.id)')
                     ->whereColumn('newer.version_number', '>', 'policy_documents.version_number');
 
@@ -187,7 +187,7 @@ class PolicyDocumentController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'reference_number' => ['nullable', 'string', 'max:100', 'unique:policy_documents,reference_number'],
+            'reference_number' => ['nullable', 'string', 'max:100', Rule::unique(PolicyDocument::class, 'reference_number')],
             'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
             'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
             'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
@@ -514,7 +514,7 @@ class PolicyDocumentController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'reference_number' => ['nullable', 'string', 'max:100', Rule::unique('policy_documents', 'reference_number')->ignore($policyDocument)],
+            'reference_number' => ['nullable', 'string', 'max:100', Rule::unique(PolicyDocument::class, 'reference_number')->ignore($policyDocument)],
             'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
             'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
             'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
