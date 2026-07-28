@@ -14,6 +14,8 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $table = 'hr_intern.users';
+
     /**
      * The attributes that are mass assignable.
      *

@@ -12,6 +12,8 @@ class PolicyDocument extends Model
 {
     use HasFactory;
 
+    protected $table = 'hr_intern.policy_documents';
+
     protected $fillable = [
         'title',
         'reference_number',

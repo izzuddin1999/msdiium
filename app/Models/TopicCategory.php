@@ -10,6 +10,8 @@ class TopicCategory extends Model
 {
     use HasFactory;
 
+    protected $table = 'hr_intern.topic_categories';
+
     protected $fillable = [
         'name',
         'slug',

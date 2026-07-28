@@ -11,6 +11,8 @@ class TopicSubtopic extends Model
 {
     use HasFactory;
 
+    protected $table = 'hr_intern.topic_subtopics';
+
     protected $fillable = [
         'topic_category_id',
         'name',
