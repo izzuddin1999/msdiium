@@ -40,6 +40,14 @@ class PolicyDocument extends Model
         'file_original_name',
         'published_at',
         'published_by',
+        'ai_summary',
+        'ai_summary_status',
+        'ai_summary_model',
+        'ai_summary_source_hash',
+        'ai_summary_generated_at',
+        'ai_summary_generated_by',
+        'ai_summary_approved_at',
+        'ai_summary_approved_by',
     ];
 
     protected function casts(): array
@@ -50,6 +58,8 @@ class PolicyDocument extends Model
             'published_at' => 'datetime',
             'effective_date' => 'date',
             'expiry_date' => 'date',
+            'ai_summary_generated_at' => 'datetime',
+            'ai_summary_approved_at' => 'datetime',
         ];
     }
 
@@ -86,6 +96,16 @@ class PolicyDocument extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function aiSummaryGenerator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ai_summary_generated_by');
+    }
+
+    public function aiSummaryApprover(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ai_summary_approved_by');
     }
 
     public function activityLogs(): HasMany

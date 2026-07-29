@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocumentActivityLog extends Model
 {
+    protected $table = 'hr_intern.document_activity_logs';
     protected $fillable = [
         'policy_document_id',
         'user_id',

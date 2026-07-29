@@ -600,6 +600,7 @@ class PolicyDocumentController extends Controller
         abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
 
         $data = $request->validate([
+            'content' => ['required', 'string'],
             'revision_summary' => ['nullable', 'string', 'max:1000'],
             'effective_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
@@ -642,12 +643,12 @@ class PolicyDocumentController extends Controller
             'topic_category' => $selectedMainTopic,
             'subtopic_id' => $selectedSubtopic,
             'topic_detail_id' => $policyDocument->topic_detail_id,
-            'content' => $policyDocument->content,
+            'content' => $data['content'],
             'revision_summary' => $data['revision_summary'] ?? null,
             'reference_number' => null,
-            'effective_date' => $data['effective_date'] ?? $policyDocument->effective_date,
-            'expiry_date' => $data['expiry_date'] ?? $policyDocument->expiry_date,
-            'remarks' => $data['remarks'] ?? $policyDocument->remarks,
+            'effective_date' => $data['effective_date'] ?? null,
+            'expiry_date' => $data['expiry_date'] ?? null,
+            'remarks' => $data['remarks'] ?? null,
             'access_scope' => $policyDocument->access_scope,
             'public_flag' => $policyDocument->public_flag,
             'owner_unit' => $policyDocument->owner_unit,
@@ -680,7 +681,7 @@ class PolicyDocumentController extends Controller
         $this->copyAttachmentsToVersion($newVersion, $retainedAttachments);
         $this->recordAttachments($newVersion, $uploadedFiles);
 
-        return redirect()->route('policy-documents.show', $policyDocument)->with('status', 'New version created successfully.');
+        return redirect()->route('policy-documents.show', $newVersion)->with('status', 'New version created successfully.');
     }
 
     public function reportCirculars(): View
@@ -689,8 +690,13 @@ class PolicyDocumentController extends Controller
 
         return view('policy_documents.report_circulars', [
             'documents' => $this->decorateCollection(
-                PolicyDocument::with('publisher')->where('document_type', 'circular')->visibleTo($viewer)->latest()->get()
+                PolicyDocument::with(['publisher', 'subtopic', 'topicDetail'])
+                    ->where('document_type', 'circular')
+                    ->visibleTo($viewer)
+                    ->latest()
+                    ->get()
             ),
+            'topicCategories' => $this->topicCategoryOptions(),
         ]);
     }
 

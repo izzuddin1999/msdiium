@@ -48,6 +48,7 @@
         .record-card .row>.col-12{grid-column:1}
         .booklet-shell iframe{height:500px!important}
     }
+    .version-panel-launch{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#006f68,#009c92);color:#fff}.version-panel-launch-copy{display:flex;align-items:center;gap:12px}.version-panel-launch-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:11px;background:rgba(255,255,255,.15)}.version-panel-launch h5{margin:0;color:#fff}.version-panel-launch p{margin:3px 0 0;color:#c9eee9;font-size:11px}.version-panel-launch .btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-weight:750}.version-form-shell{display:none}.version-panel.is-open .version-form-shell{display:block}.version-panel.is-open .version-panel-launch{display:none}.version-form-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.version-form-heading .btn{display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:8px}.version-content-field{min-height:145px!important}.version-panel .card-footer{display:flex;gap:9px}.version-panel .card-footer .btn-primary{flex:1}.version-panel .card-footer .btn-light{flex:0 0 auto}@media(max-width:575px){.version-panel-launch{align-items:flex-start;flex-direction:column}.version-panel-launch .btn{width:100%;justify-content:center}}
     .footer{position:relative!important;clear:both!important;bottom:auto!important}
 </style>
 @php
@@ -103,6 +104,7 @@
     <div class="summary-tile"><span class="summary-icon material-icons">event_available</span><div><small>Effective date</small><strong>{{ $document->effective_date?->format('d M Y') ?? 'Not set' }}</strong></div></div>
     <div class="summary-tile"><span class="summary-icon material-icons">event_busy</span><div><small>Expiry date</small><strong>{{ $document->expiry_date?->format('d M Y') ?? 'No expiry' }}</strong></div></div>
 </div>
+
 
 <div class="row staff-reading-layout">
     <div class="col-lg-8">
@@ -388,13 +390,21 @@
             @endif
 
             @if($canManageDocuments)
-            <div class="card version-panel" id="new-version">
-                <div class="card-header">
-                    <div>
-                        <h5 class="mb-1">Create New Version</h5>
-                        <p class="mb-0 text-muted small">The current document details and classification will be carried forward automatically.</p>
+            <div class="card version-panel {{ $errors->any() ? 'is-open' : '' }}" id="new-version">
+                <div class="version-panel-launch">
+                    <div class="version-panel-launch-copy">
+                        <span class="version-panel-launch-icon material-icons">difference</span>
+                        <div><h5>Create a new version</h5><p>Start Version {{ $document->version_number + 1 }} as a blank draft linked to this document.</p></div>
                     </div>
-                    <span class="badge bg-light text-dark">New version · Draft</span>
+                    <button type="button" class="btn btn-light" id="openVersionForm"><span class="material-icons">add</span>Create Version {{ $document->version_number + 1 }}</button>
+                </div>
+                <div class="version-form-shell">
+                <div class="card-header version-form-heading">
+                    <div>
+                        <h5 class="mb-1">New Version {{ $document->version_number + 1 }}</h5>
+                        <p class="mb-0 small" style="color:#c9eee9">Enter fresh content for the revision. Classification and governance stay linked to the original record.</p>
+                    </div>
+                    <button type="button" class="btn btn-light" id="closeVersionForm" title="Close new version form"><span class="material-icons">close</span></button>
                 </div>
                 <form action="{{ route('policy-documents.versions.store', $document) }}" method="POST" enctype="multipart/form-data" id="newVersionForm" data-refresh-csrf>
                     @csrf
@@ -410,20 +420,25 @@
                     @endif
                     <div class="card-body row g-3">
                         <div class="col-12">
+                            <label class="form-label">Content</label>
+                            <textarea name="content" class="form-control version-content-field" rows="5" placeholder="Enter the complete content for this new version.">{{ old('content') }}</textarea>
+                            <small class="text-muted">This field starts blank so the previous version remains unchanged.</small>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label">Revision Summary</label>
                             <textarea name="revision_summary" class="form-control" rows="3" placeholder="Explain what changed in this new version.">{{ old('revision_summary') }}</textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Effective Date</label>
-                            <input type="date" name="effective_date" class="form-control" value="{{ old('effective_date', $document->effective_date?->format('Y-m-d')) }}">
+                            <input type="date" name="effective_date" class="form-control" value="{{ old('effective_date') }}">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Expiry Date</label>
-                            <input type="date" name="expiry_date" class="form-control" value="{{ old('expiry_date', $document->expiry_date?->format('Y-m-d')) }}">
+                            <input type="date" name="expiry_date" class="form-control" value="{{ old('expiry_date') }}">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Remarks</label>
-                            <textarea name="remarks" class="form-control" rows="3">{{ old('remarks', $document->remarks) }}</textarea>
+                            <textarea name="remarks" class="form-control" rows="3" placeholder="Optional remarks for this version.">{{ old('remarks') }}</textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label">PDFs from Version {{ $document->version_number }}</label>
@@ -474,9 +489,11 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button class="btn btn-primary w-100">Create Version</button>
+                        <button class="btn btn-primary">Create Version {{ $document->version_number + 1 }}</button>
+                        <button type="button" class="btn btn-light" id="cancelVersionForm">Cancel</button>
                     </div>
                 </form>
+                </div>
                 @if($document->status === 'draft')
                     @foreach($currentAttachments as $attachment)
                         <form id="deleteAttachment{{ $attachment->id }}" action="{{ route('document-attachments.destroy', $attachment) }}" method="POST" data-refresh-csrf class="d-none">
@@ -494,6 +511,27 @@
 
 <script>
     (function () {
+        const versionPanel = document.getElementById('new-version');
+        const versionForm = document.getElementById('newVersionForm');
+        const setVersionFormOpen = (open) => {
+            if (!versionPanel) return;
+
+            versionPanel.classList.toggle('is-open', open);
+            if (open) {
+                window.history.replaceState(null, '', '#new-version');
+                window.setTimeout(() => versionForm?.querySelector('[name="content"]')?.focus(), 100);
+                return;
+            }
+
+            versionForm?.reset();
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        };
+
+        document.getElementById('openVersionForm')?.addEventListener('click', () => setVersionFormOpen(true));
+        document.getElementById('closeVersionForm')?.addEventListener('click', () => setVersionFormOpen(false));
+        document.getElementById('cancelVersionForm')?.addEventListener('click', () => setVersionFormOpen(false));
+        if (window.location.hash === '#new-version') setVersionFormOpen(true);
+
         document.querySelectorAll('.pdf-retain-toggle').forEach((button) => {
             const checkbox = document.getElementById(button.dataset.checkbox);
             if (!checkbox) return;

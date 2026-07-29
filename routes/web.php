@@ -1,21 +1,27 @@
 <?php
 
+use App\Http\Controllers\PortalAssistantController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DirectorySyncController;
+use App\Http\Controllers\DocumentActivityLogController;
+use App\Http\Controllers\FormTemplateController;
+use App\Http\Controllers\LookupValueController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PolicyDocumentController;
+use App\Http\Controllers\ReportingDashboardController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\TopicCategoryController;
-use App\Http\Controllers\ViewerSessionController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ReportingDashboardController;
-use App\Http\Controllers\LookupValueController;
-use App\Http\Controllers\DocumentActivityLogController;
 use App\Http\Controllers\UserAccessReportController;
-use App\Http\Controllers\DirectorySyncController;
-use App\Http\Controllers\FormTemplateController;
+use App\Http\Controllers\ViewerSessionController;
+use App\Http\Middleware\EnsureFormBuilderEnabled;
+use App\Models\PolicyDocument;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()]))->name('csrf-token');
+Route::get('/csrf-token', fn () => response()
+    ->json(['token' => csrf_token()])
+    ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0'))
+    ->name('csrf-token');
 
 Route::post('/viewer-session', [ViewerSessionController::class, 'store'])->name('viewer-session.store');
 Route::delete('/viewer-session', [ViewerSessionController::class, 'destroy'])->name('viewer-session.destroy');
@@ -36,8 +42,9 @@ Route::get('/policy-documents/{policyDocument}/edit', [PolicyDocumentController:
 Route::put('/policy-documents/{policyDocument}', [PolicyDocumentController::class, 'update'])->name('policy-documents.update');
 Route::delete('/policy-documents/{policyDocument}', [PolicyDocumentController::class, 'destroy'])->name('policy-documents.destroy');
 Route::post('/policy-documents/{policyDocument}/publish', [PolicyDocumentController::class, 'publish'])->name('policy-documents.publish');
-Route::get('/policy-documents/{policyDocument}/versions', fn (\App\Models\PolicyDocument $policyDocument) => redirect(route('policy-documents.show', $policyDocument).'#new-version'))->name('policy-documents.versions.index');
+Route::get('/policy-documents/{policyDocument}/versions', fn (PolicyDocument $policyDocument) => redirect(route('policy-documents.show', $policyDocument).'#new-version'))->name('policy-documents.versions.index');
 Route::post('/policy-documents/{policyDocument}/versions', [PolicyDocumentController::class, 'storeVersion'])->name('policy-documents.versions.store');
+Route::post('/portal-assistant/ask', [PortalAssistantController::class, 'ask'])->name('portal-assistant.ask');
 Route::get('/reports/policy-circular', [PolicyDocumentController::class, 'reportCirculars'])->name('reports.circulars');
 Route::get('/reports/policy-versions', [PolicyDocumentController::class, 'reportVersions'])->name('reports.versions');
 Route::get('/reports/dashboard', [ReportingDashboardController::class, 'index'])->name('reports.dashboard');
@@ -67,7 +74,7 @@ Route::get('/reports/user-access/export', [UserAccessReportController::class, 'e
 Route::get('/directory-sync', [DirectorySyncController::class, 'index'])->name('directory-sync.index');
 Route::post('/directory-sync', [DirectorySyncController::class, 'store'])->name('directory-sync.store');
 
-Route::middleware(\App\Http\Middleware\EnsureFormBuilderEnabled::class)->group(function (): void {
+Route::middleware(EnsureFormBuilderEnabled::class)->group(function (): void {
     Route::get('/form-templates', [FormTemplateController::class, 'index'])->name('form-templates.index');
     Route::post('/form-templates', [FormTemplateController::class, 'store'])->name('form-templates.store');
     Route::get('/form-templates/{formTemplate}/edit', [FormTemplateController::class, 'edit'])->name('form-templates.edit');
