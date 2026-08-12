@@ -136,7 +136,7 @@
 
     document.querySelectorAll('.field-delete-form').forEach(form => form.addEventListener('submit', async event => {
         event.preventDefault();
-        if (!confirm('Remove this component from the form?')) return;
+        if (!await window.PortalDialog.confirm('Remove this component from the form?', { title: 'Remove form component', confirmText: 'Remove' })) return;
         const wrapper = form.closest('.sortable-field');
         state.textContent = 'Removing field…'; state.className = 'save-state saving';
         const response = await requestWithFreshCsrf(form.action, {method:'POST', body:new FormData(form)});

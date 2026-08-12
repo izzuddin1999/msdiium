@@ -88,6 +88,10 @@
     .document-detail-page table tbody tr:hover{background:#f8fafc}
 </style>
 <style>
+    /* Accessible metadata sizing for the governed record panel. */
+    .document-detail-page .record-card .card-header h5{font-size:18px!important;line-height:1.3!important}
+    .document-detail-page .record-card .row>.col-md-6 strong{font-size:12px!important;line-height:1.5!important}
+    .document-detail-page .record-card .row>.col-md-6>div{font-size:13px!important;line-height:1.5!important}
     .record-card .row > .document-content-row {
         display: block;
         grid-column: 1 / -1;
@@ -158,7 +162,7 @@
         @endif
         @if($canManageDocuments)
             <a href="{{ route('policy-documents.edit', $document) }}" class="btn btn-warning"><span class="material-icons">edit</span>Edit</a>
-            <form action="{{ route('policy-documents.destroy', $document) }}" method="POST" data-refresh-csrf onsubmit="return confirm('Delete this document permanently? This action cannot be undone.');">
+            <form action="{{ route('policy-documents.destroy', $document) }}" method="POST" data-refresh-csrf data-confirm="Delete this document permanently? This action cannot be undone." data-confirm-title="Delete document" data-confirm-button="Delete permanently">
                 @csrf
                 @method('DELETE')
                 <button class="btn btn-danger"><span class="material-icons">delete</span>Delete</button>
@@ -540,7 +544,7 @@
                                                 <a href="{{ route('document-attachments.download', $attachment) }}" class="btn btn-sm btn-outline-secondary" title="Download PDF"><span class="material-icons">download</span></a>
                                                 <button type="button" class="btn btn-sm btn-outline-warning pdf-retain-toggle" data-checkbox="retainAttachment{{ $attachment->id }}" title="Exclude from next version"><span class="material-icons">remove_circle_outline</span></button>
                                                 @if($document->status === 'draft')
-                                                    <button type="submit" form="deleteAttachment{{ $attachment->id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this PDF permanently from the draft version?')" title="Delete permanently"><span class="material-icons">delete</span></button>
+                                                    <button type="submit" form="deleteAttachment{{ $attachment->id }}" class="btn btn-sm btn-outline-danger" title="Delete permanently"><span class="material-icons">delete</span></button>
                                                 @endif
                                             </div>
                                         </div>
@@ -570,7 +574,7 @@
                 </div>
                 @if($document->status === 'draft')
                     @foreach($currentAttachments as $attachment)
-                        <form id="deleteAttachment{{ $attachment->id }}" action="{{ route('document-attachments.destroy', $attachment) }}" method="POST" data-refresh-csrf class="d-none">
+                        <form id="deleteAttachment{{ $attachment->id }}" action="{{ route('document-attachments.destroy', $attachment) }}" method="POST" data-refresh-csrf data-confirm="Delete this PDF permanently from the draft version?" data-confirm-title="Delete PDF attachment" data-confirm-button="Delete permanently" class="d-none">
                             @csrf
                             @method('DELETE')
                         </form>
@@ -694,7 +698,7 @@
                 const invalid = incoming.find((file) => file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf'));
                 const oversized = incoming.find((file) => file.size > 3 * 1024 * 1024);
                 if (invalid || oversized || selectedFiles.length + incoming.length > 10) {
-                    window.alert(invalid ? 'Only PDF files are allowed.' : oversized ? 'Each PDF must be 3 MB or smaller.' : 'A maximum of 10 PDFs can be uploaded.');
+                    window.PortalDialog.alert(invalid ? 'Only PDF files are allowed.' : oversized ? 'Each PDF must be 3 MB or smaller.' : 'A maximum of 10 PDFs can be uploaded.', { title: 'Unable to add PDF' });
                     syncPdfInput();
                     return;
                 }
@@ -765,7 +769,7 @@
                         submitButton.disabled = false;
                         submitButton.textContent = submitButton.dataset.originalText || 'Submit';
                     }
-                    window.alert(error.message + ' Please refresh the page and try again.');
+                    window.PortalDialog.alert(error.message + ' Please refresh the page and try again.', { title: 'Request could not be completed' });
                 }
             });
         });

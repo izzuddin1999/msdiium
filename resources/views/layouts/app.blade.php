@@ -316,6 +316,7 @@
     </div>
     <button class="back-to-top" id="backToTop" type="button" aria-label="Back to top" title="Back to top"><span class="material-icons">arrow_upward</span></button>
     @include('partials.portal-assistant')
+    @include('partials.system-dialog')
 </div>
 
 <script src="https://style.iium.edu.my/vendor/global/global.min.js"></script>
