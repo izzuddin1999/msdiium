@@ -250,15 +250,17 @@ class PublicPortalController extends Controller
 
     private function eligibleDocuments(): Builder
     {
+        $documentsTable = (new PolicyDocument)->getTable();
+
         return PolicyDocument::query()
-            ->from('hr_intern.policy_documents as public_documents')
+            ->from($documentsTable.' as public_documents')
             ->select('public_documents.*')
             ->where('public_documents.status', 'published')
             ->where('public_documents.public_flag', true)
             ->whereRaw('LOWER(public_documents.access_scope) = ?', ['all'])
-            ->whereNotExists(function ($query): void {
+            ->whereNotExists(function ($query) use ($documentsTable): void {
                 $query->selectRaw('1')
-                    ->from('hr_intern.policy_documents as newer')
+                    ->from($documentsTable.' as newer')
                     ->whereRaw('COALESCE(newer.parent_document_id, newer.id) = COALESCE(public_documents.parent_document_id, public_documents.id)')
                     ->whereColumn('newer.version_number', '>', 'public_documents.version_number')
                     ->where('newer.status', 'published')

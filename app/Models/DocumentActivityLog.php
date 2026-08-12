@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesHrInternSchema;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocumentActivityLog extends Model
 {
+    use UsesHrInternSchema;
     protected $table = 'hr_intern.document_activity_logs';
     protected $fillable = [
         'policy_document_id',

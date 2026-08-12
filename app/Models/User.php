@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesHrInternSchema;
+
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use App\Models\PolicyDocument;
@@ -12,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use UsesHrInternSchema;
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
