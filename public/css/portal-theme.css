@@ -1,0 +1,169 @@
+:root{
+    --portal-font:"Poppins",Arial,sans-serif;
+    --portal-ink:#202b39;
+    --portal-text:#344054;
+    --portal-muted:#6f817c;
+    --portal-teal:#00928f;
+    --portal-blue:#159cf5;
+    --portal-border:#dfe5ea;
+    --portal-surface:#fff;
+    --portal-soft:#f5f8fa;
+    --portal-radius:14px;
+    --portal-shadow:0 8px 24px rgba(31,42,55,.07);
+    --portal-font-xs:.625rem;
+    --portal-font-sm:.6875rem;
+    --portal-font-body:.75rem;
+    --portal-font-md:.8125rem;
+    --portal-font-section:1rem;
+    --portal-font-page:1.625rem;
+}
+
+html,body,button,input,select,textarea,option,label,table,thead,tbody,tfoot,tr,th,td,.table,.dropdown-menu,.form-control,.form-select,.btn,.card,.modal,.alert,.breadcrumb,.pagination{font-family:var(--portal-font)!important}
+body{color:var(--portal-text);font-size:var(--portal-font-md);line-height:1.5}
+a,button,input,select,textarea{font-size:inherit}
+h1,h2,h3,h4,h5,h6{color:var(--portal-ink);font-family:var(--portal-font)!important;line-height:1.25}
+p{line-height:1.65}
+.material-icons{font-family:'Material Icons'!important;font-weight:normal!important;font-style:normal}
+table th{font-weight:600}table td{font-weight:400}
+
+/* Dashboard typography scale shared by every module. */
+.content-body,.portal-main main{font-size:var(--portal-font-md)}
+.content-body h1,.portal-main main h1{font-size:var(--portal-font-page)!important;font-weight:600!important;letter-spacing:-.02em}
+.content-body h2,.portal-main main h2{font-size:1.375rem!important;font-weight:700!important;letter-spacing:-.015em}
+.content-body h3,.portal-main main h3{font-size:var(--portal-font-section)!important;font-weight:700!important}
+.content-body h4,.portal-main main h4,.content-body h5,.portal-main main h5{font-size:.875rem!important;font-weight:700!important}
+.card-title,.card-header h3,.card-header h4,.card-header h5,.flow-card h3,.admin-panel-title,.combined-panel-heading strong,.policy-repository-title{font-size:var(--portal-font-section)!important;font-weight:700!important}
+.card-body,.flow-card,.combined-panel,.policy-repository,.directory-card{font-size:var(--portal-font-body)}
+label,.form-label,.policy-field label,.filter-card label>span{font-size:var(--portal-font-sm)!important;font-weight:600!important}
+.form-control,.form-select,.filter-card input,.filter-card select,.policy-field .form-control,.portal-viewer-switch select,.viewer-switch select{font-size:var(--portal-font-body)!important;font-weight:400!important}
+.btn,.primary-button,.filter-button,.view-button,.outline-button{font-size:var(--portal-font-body)!important;font-weight:600!important}
+table,.table,.policy-table-head,.policy-document-row{font-size:var(--portal-font-sm)!important}
+table th,.table th,.policy-table-head{font-size:var(--portal-font-xs)!important;font-weight:700!important;letter-spacing:.02em}
+.eyebrow,.admin-kicker,.classification-label,.hero-panel-label,.nav-label,.menu-title{font-size:var(--portal-font-xs)!important;font-weight:700!important}
+.status-pill,.type-pill,.policy-count,.group-count,.badge{font-size:var(--portal-font-xs)!important;font-weight:700!important}
+.breadcrumb,.page-bar .breadcrumb,.page-titles .breadcrumb{font-size:var(--portal-font-body)!important}
+.page-bar h1,.page-titles .bc-title{font-size:1rem!important;font-weight:600!important}
+.sidebar-nav a,.deznav .metismenu a{font-size:.8125rem!important}
+.sidebar-nav .nav-label,.deznav .menu-title{font-size:var(--portal-font-xs)!important}
+.header-context strong,.public-header-profile strong{font-size:var(--portal-font-sm)!important}.header-context small,.public-header-profile small{font-size:var(--portal-font-xs)!important}
+
+/* Shared IIUM application chrome. */
+.portal-name,.deznav .menu-title{color:var(--portal-blue)!important;font-size:1rem!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important}
+.sidebar-nav a,.deznav .metismenu a{color:#323b39;font-size:.875rem!important;font-weight:400}
+.sidebar-nav a .material-icons,.deznav .menu-icon .material-icons{font-size:1.4375rem}
+.sidebar-nav a.active,.deznav .metismenu a.active{background:#eef8f6!important;color:var(--portal-blue)!important;font-weight:600}
+.sidebar-nav a.active .material-icons,.deznav .metismenu a.active .material-icons{color:var(--portal-blue)!important}
+.nav-label{color:var(--portal-blue);font-size:.6875rem;font-weight:700}
+.portal-header,.header{background:var(--portal-teal)!important}
+.page-bar h1,.page-titles .bc-title{margin:0;color:var(--portal-ink);font-size:1.0625rem!important;font-weight:600!important}
+.page-bar .breadcrumb,.page-titles .breadcrumb{font-size:.8125rem}
+.page-bar .breadcrumb strong,.page-titles .breadcrumb-item.active a{color:var(--portal-blue)!important}
+.page-titles .breadcrumb{display:flex!important;align-items:center;gap:1.125rem;margin:0}
+.page-titles .breadcrumb>li{display:flex;align-items:center;flex:0 0 auto}
+.page-titles .breadcrumb-item+.breadcrumb-item{padding-left:0}
+.page-titles .breadcrumb-item+.breadcrumb-item:before{padding-right:.5rem;color:#98a2b3}
+
+/* Shared content typography. */
+.eyebrow,.admin-kicker,.classification-label,.hero-panel-label{color:var(--portal-teal);font-size:.6875rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.page-heading h2,.repository-hero h2,.section-heading h2,.staff-workspace-heading h2,.unit-directory-heading h2{font-size:1.75rem!important;font-weight:700!important;letter-spacing:-.02em}
+.page-heading p,.repository-hero p,.section-heading p,.staff-workspace-heading p,.unit-directory-heading p{color:var(--portal-muted);font-size:.875rem}
+
+/* Shared controls and surfaces. */
+.btn,.primary-button,.filter-button,.view-button,.outline-button{height:2.75rem!important;min-height:2.75rem!important;padding:.625rem 1rem!important;border-radius:10px!important;font-family:var(--portal-font)!important;font-size:.875rem!important;font-weight:600!important;line-height:1.25!important}
+.btn-primary,.primary-button,.filter-button{border-color:var(--portal-blue)!important;background:var(--portal-blue)!important;color:#fff!important}
+.btn-primary:hover,.primary-button:hover,.filter-button:hover{border-color:#087dcc!important;background:#087dcc!important}
+.form-control,.form-select,.filter-card input,.filter-card select,.portal-viewer-switch select,.viewer-switch select{min-height:2.75rem;border-color:#d3dfdc;border-radius:10px!important;background:#fff;color:var(--portal-text);font-family:var(--portal-font)!important}
+.form-control:focus,.form-select:focus,.filter-card input:focus,.filter-card select:focus{border-color:var(--portal-teal);box-shadow:0 0 0 3px rgba(0,146,143,.12)}
+.card,.flow-card,.metric-card,.repository-stat,.repository-filter,.repository-results,.unit-directory,.unit-card,.directory-card,.combined-panel,.combined-metrics>a,.hero-panel{border-color:var(--portal-border)!important;border-radius:var(--portal-radius)!important;box-shadow:var(--portal-shadow)!important}
+.status-pill,.unit-total,.all-units-link,.classification-count{font-family:var(--portal-font)}
+
+*:focus-visible{outline:3px solid rgba(21,156,245,.28);outline-offset:2px}
+
+@media(max-width:767px){
+    body{font-size:13px}
+    .page-heading h2,.repository-hero h2,.section-heading h2,.staff-workspace-heading h2,.unit-directory-heading h2{font-size:1.5rem}
+}
+
+/* Final scale guard: page-level styles may define their own layout, but not a
+   different typography system. Keep this block last in the shared theme. */
+body .content-body,body .portal-main main{font-size:var(--portal-font-md)!important}
+body .content-body h1,body .portal-main main h1{font-size:var(--portal-font-page)!important;font-weight:600!important}
+body .content-body h2,body .portal-main main h2,body .page-heading h2,body .repository-hero h2,body .section-heading h2,body .staff-workspace-heading h2,body .unit-directory-heading h2{font-size:1.375rem!important;font-weight:700!important}
+body .content-body h3,body .portal-main main h3{font-size:var(--portal-font-section)!important;font-weight:700!important}
+body .content-body h4,body .portal-main main h4,body .content-body h5,body .portal-main main h5{font-size:.875rem!important;font-weight:700!important}
+body .btn,body .primary-button,body .filter-button,body .view-button,body .outline-button{font-size:var(--portal-font-body)!important;font-weight:600!important}
+body .form-control,body .form-select,body .filter-card input,body .filter-card select,body .policy-field .form-control,body .portal-viewer-switch select,body .viewer-switch select{font-size:var(--portal-font-body)!important}
+body table,body .table,body .policy-table-head,body .policy-document-row{font-size:var(--portal-font-sm)!important}
+body table th,body .table th,body .policy-table-head{font-size:var(--portal-font-xs)!important;font-weight:700!important}
+
+/* Identical navigation rhythm in the public/dashboard and management shells. */
+body .portal-sidebar,body .deznav{width:16.375rem!important}
+body .portal-main{margin-left:16.375rem!important}
+body .content-body{margin-left:16.375rem!important}
+body .portal-brand,body .nav-header{height:4.875rem!important;min-height:4.875rem!important}
+body .portal-name,body #menu>li.menu-title:first-child{min-height:3.25rem;padding:.9375rem 1.5625rem .75rem!important;color:var(--portal-blue)!important;font-size:1rem!important;font-weight:500!important;line-height:1.35!important;letter-spacing:0!important;text-transform:none!important}
+body .sidebar-nav>a,body .deznav .metismenu>li>a{display:flex!important;align-items:center!important;gap:.8125rem!important;min-height:3rem!important;margin:0!important;padding:.6875rem 1.5625rem!important;line-height:1.35!important}
+body .sidebar-nav>a>span:last-child,body .deznav .metismenu .nav-text{font-size:.8125rem!important;font-weight:400!important;line-height:1.35!important}
+body .sidebar-nav>a.active>span:last-child,body .deznav .metismenu a.active .nav-text{font-weight:600!important}
+body .sidebar-nav>a .material-icons,body .deznav .menu-icon .material-icons{font-size:1.3125rem!important}
+body .sidebar-nav>a .material-icons,body .deznav .menu-icon{flex:0 0 1.5rem!important;width:1.5rem!important}
+body .nav-label,body #menu>li.menu-title:not(:first-child){min-height:auto!important;margin:1.75rem 1.5625rem .5rem!important;padding:0!important;color:var(--portal-blue)!important;font-size:.625rem!important;font-weight:700!important;line-height:1.3!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+body .portal-viewer-switch,body .viewer-switch{font-size:var(--portal-font-body)!important}
+@media(max-width:820px){body .portal-main{margin-left:0!important}body #main-wrapper .content-body{margin-left:3.75rem!important}body #main-wrapper .deznav{width:3.75rem!important}}
+
+/* IIUM Directory theme: one token layer for public and staff interfaces. */
+html[data-theme="iium-directory"]{
+ --theme-teal-900:#075f62;--theme-teal-700:#008f8c;--theme-teal-100:#d9f5ec;
+ --theme-yellow:#ffdc59;--theme-yellow-border:#eebd12;--theme-ink:#101d36;
+ --theme-muted:#516175;--theme-canvas:#eef7f6;--theme-line:#d5e4e2;
+ --theme-shadow:0 10px 28px rgba(27,78,82,.10);
+ --theme-gradient:linear-gradient(118deg,#dcf8e8 0%,#c9eef0 48%,#a8caf3 100%);
+ --portal-teal:var(--theme-teal-700);--portal-blue:var(--theme-teal-700);
+ --portal-ink:var(--theme-ink);--portal-text:#29364a;--portal-muted:var(--theme-muted);
+ --portal-border:var(--theme-line);--portal-soft:var(--theme-canvas);--portal-radius:8px;
+ --portal-shadow:var(--theme-shadow)
+}
+html[data-theme="iium-directory"] body{color:var(--theme-ink);background-color:var(--theme-canvas)!important;background-image:radial-gradient(rgba(0,143,140,.055) .8px,transparent .8px);background-size:15px 15px}
+html[data-theme="iium-directory"] :is(.portal-header,.header,.iium-footer,.footer){background:var(--theme-teal-700)!important}
+html[data-theme="iium-directory"] :is(.portal-sidebar,.deznav,.nav-header){border-color:var(--theme-line)!important;background:rgba(255,255,255,.97)!important}
+html[data-theme="iium-directory"] :is(.page-bar,.page-titles){border-color:var(--theme-line)!important;background:rgba(255,255,255,.94)!important}
+html[data-theme="iium-directory"] :is(.portal-name,#menu>li.menu-title:first-child){color:var(--theme-teal-700)!important;font-weight:700!important}
+html[data-theme="iium-directory"] :is(.sidebar-nav a.active,.deznav .metismenu a.active){background:var(--theme-teal-100)!important;color:var(--theme-teal-900)!important}
+html[data-theme="iium-directory"] :is(.sidebar-nav a.active:before,.deznav .metismenu a.active:before){background:var(--theme-yellow-border)!important}
+html[data-theme="iium-directory"] :is(.card,.flow-card,.metric-card,.repository-stat,.repository-filter,.repository-results,.directory-card,.combined-panel,.hero-panel,.public-v2-section,.admin-panel){border:1px solid var(--theme-line)!important;border-radius:8px!important;background:rgba(255,255,255,.94)!important;box-shadow:var(--theme-shadow)!important}
+html[data-theme="iium-directory"] :is(.card-header,.admin-panel-title,.directory-header,.card-heading){border-color:var(--theme-yellow-border)!important;background:var(--theme-yellow)!important;color:var(--theme-ink)!important}
+html[data-theme="iium-directory"] :is(.btn-primary,.primary-button,.filter-button,.public-directory-filter button){border-color:var(--theme-teal-700)!important;background:var(--theme-teal-700)!important}
+html[data-theme="iium-directory"] :is(.btn-primary,.primary-button,.filter-button):hover{border-color:var(--theme-teal-900)!important;background:var(--theme-teal-900)!important}
+html[data-theme="iium-directory"] :is(.form-control,.form-select,input,select):focus{border-color:var(--theme-teal-700)!important;box-shadow:0 0 0 3px rgba(0,143,140,.16)!important}
+
+/* Reference-inspired MSD classification board. */
+html[data-theme="iium-directory"] :is(.msd-public-topics,.msd-topics){padding:32px!important;border:1px solid #bddbd7!important;border-radius:0!important;background:var(--theme-gradient)!important;box-shadow:var(--theme-shadow)!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-grid,.msd-topic-grid){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:22px!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-card,.msd-topic-card){min-height:238px!important;overflow:visible!important;border:2px solid var(--theme-yellow-border)!important;border-radius:0!important;background:rgba(255,255,255,.1)!important;box-shadow:none!important}
+html[data-theme="iium-directory"] .msd-public-topic-head{grid-template-columns:92px minmax(0,1fr)!important;min-height:70px!important;background:var(--theme-yellow)!important}
+html[data-theme="iium-directory"] .msd-topic-card-head{min-height:70px!important;background:var(--theme-yellow)!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-code,.msd-topic-code){position:relative!important;z-index:1!important;display:grid!important;place-items:center!important;min-width:78px!important;margin:-10px 0 -8px 10px!important;padding:8px!important;background:linear-gradient(180deg,#61aaa5,#217c7b)!important;color:#fff!important;font-size:1.75rem!important;font-weight:800!important;filter:drop-shadow(0 4px 3px rgba(25,71,72,.23))}
+html[data-theme="iium-directory"] .msd-topic-code{flex:0 0 78px!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-code,.msd-topic-code):after{content:"";position:absolute;right:0;bottom:-13px;left:0;border-top:14px solid #217c7b;border-right:39px solid transparent;border-left:39px solid transparent}
+html[data-theme="iium-directory"] .msd-public-topic-head strong,html[data-theme="iium-directory"] .msd-topic-card-head h3{padding:12px 16px!important;color:var(--theme-ink)!important;font-size:1rem!important;font-weight:800!important;line-height:1.15!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-list,.msd-topic-list){margin:0!important;padding:25px 22px 22px 38px!important;color:#21334a!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-list li,.msd-topic-list li){margin:0 0 7px!important;font-size:.75rem!important;line-height:1.4!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-list a,.msd-topic-list a){color:#21334a!important}
+html[data-theme="iium-directory"] .portal-assistant-toggle{background:var(--theme-teal-700)!important}
+@media(max-width:760px){html[data-theme="iium-directory"] :is(.msd-public-topics,.msd-topics){padding:20px 14px!important}html[data-theme="iium-directory"] :is(.msd-public-topic-grid,.msd-topic-grid){grid-template-columns:1fr!important}}
+
+/* Compact classification directory: content-sized masonry cards. */
+html[data-theme="iium-directory"] :is(.msd-public-topics,.msd-topics){padding:18px!important}
+html[data-theme="iium-directory"] :is(.msd-public-topics,.msd-topics) h2{margin-bottom:12px!important;font-size:1.25rem!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-grid,.msd-topic-grid){display:block!important;column-count:2;column-gap:14px}
+html[data-theme="iium-directory"] :is(.msd-public-topic-card,.msd-topic-card){display:inline-block!important;width:100%;min-height:0!important;margin:0 0 14px!important;break-inside:avoid-column}
+html[data-theme="iium-directory"] .msd-public-topic-head{grid-template-columns:72px minmax(0,1fr)!important;min-height:52px!important}
+html[data-theme="iium-directory"] .msd-topic-card-head{min-height:52px!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-code,.msd-topic-code){min-width:60px!important;min-height:62px!important;margin:-7px 0 -6px 7px!important;padding:6px!important;font-size:1.25rem!important}
+html[data-theme="iium-directory"] .msd-topic-code{flex-basis:60px!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-code,.msd-topic-code):after{bottom:-10px;border-top-width:10px;border-right-width:30px;border-left-width:30px}
+html[data-theme="iium-directory"] .msd-public-topic-head strong,
+html[data-theme="iium-directory"] .msd-topic-card-head h3{padding:9px 12px!important;font-size:.8rem!important;line-height:1.2!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-list,.msd-topic-list){padding:18px 16px 13px 30px!important}
+html[data-theme="iium-directory"] :is(.msd-public-topic-list li,.msd-topic-list li){margin-bottom:4px!important;font-size:.68rem!important;line-height:1.35!important}
+@media(max-width:760px){html[data-theme="iium-directory"] :is(.msd-public-topic-grid,.msd-topic-grid){column-count:1}html[data-theme="iium-directory"] :is(.msd-public-topics,.msd-topics){padding:14px!important}}

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\PolicyDocument;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class ReportingDashboardController extends Controller
@@ -12,50 +11,30 @@ class ReportingDashboardController extends Controller
     public function index(Request $request): View
     {
         abort_unless($request->user()?->canManagePolicies(), 403);
+        $organization = $request->user()->unit === 'kcdiom' ? 'kcdiom' : 'msd';
 
-        $base = PolicyDocument::query();
-        $statusCounts = $this->countsBy(clone $base, 'status');
-        $unitCounts = $this->countsBy(clone $base, 'owner_unit');
-        $typeCounts = $this->countsBy(clone $base, 'document_type');
-        $topicCounts = PolicyDocument::query()
-            ->selectRaw("COALESCE(topic_category, 'uncategorized') as label, COUNT(*) as total")
-            ->groupBy('label')
-            ->orderByDesc('total')
-            ->limit(8)
-            ->pluck('total', 'label');
+        $base = PolicyDocument::query()->where('owner_unit', $organization);
+        $documentReport = PolicyDocument::query()
+            ->where('owner_unit', $organization)
+            ->whereNotExists(function ($newer): void {
+                $newer->selectRaw('1')
+                    ->from((new PolicyDocument)->getTable().' as newer')
+                    ->whereRaw('COALESCE(newer.parent_document_id, newer.id) = COALESCE(policy_documents.parent_document_id, policy_documents.id)')
+                    ->whereColumn('newer.version_number', '>', 'policy_documents.version_number');
+            })
+            ->orderBy('title')
+            ->paginate(10, ['*'], 'report_page')
+            ->withQueryString();
 
         return view('reports.dashboard', [
             'metrics' => [
-                'documents' => (clone $base)->count(),
-                'published' => (clone $base)->where('status', 'published')->count(),
-                'versions' => (clone $base)->whereNotNull('parent_document_id')->count(),
-                'expiring' => (clone $base)
-                    ->whereNotNull('expiry_date')
-                    ->whereDate('expiry_date', '>=', today())
-                    ->whereDate('expiry_date', '<=', today()->addDays(90))
-                    ->count(),
+                'total' => (clone $base)->count(),
+                'active' => (clone $base)->where('status', 'published')->count(),
+                'archived' => (clone $base)->where('status', 'archived')->count(),
             ],
-            'statusCounts' => $statusCounts,
-            'unitCounts' => $unitCounts,
-            'typeCounts' => $typeCounts,
-            'topicCounts' => $topicCounts,
-            'statusMaximum' => max(1, (int) $statusCounts->max()),
-            'unitMaximum' => max(1, (int) $unitCounts->max()),
-            'typeMaximum' => max(1, (int) $typeCounts->max()),
-            'topicMaximum' => max(1, (int) $topicCounts->max()),
-            'recentPublications' => PolicyDocument::with('publisher')
-                ->where('status', 'published')
-                ->latest('published_at')
-                ->limit(6)
-                ->get(),
+            'documentReport' => $documentReport,
+            'organizationSubmissionCount' => (clone $base)->count(),
+            'organization' => $organization,
         ]);
-    }
-
-    private function countsBy($query, string $column): Collection
-    {
-        return $query->selectRaw("{$column} as label, COUNT(*) as total")
-            ->groupBy($column)
-            ->orderByDesc('total')
-            ->pluck('total', 'label');
     }
 }

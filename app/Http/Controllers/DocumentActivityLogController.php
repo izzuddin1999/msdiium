@@ -6,6 +6,7 @@ use App\Models\DocumentActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentActivityLogController extends Controller
 {
@@ -13,6 +14,37 @@ class DocumentActivityLogController extends Controller
     {
         abort_unless($request->user()?->canAdministerAccess(), 403);
 
+        $query = $this->filteredQuery($request);
+
+        return view('document_activity_logs.index', [
+            'logs' => $query->paginate(5)->withQueryString(),
+            'users' => User::where('is_active', true)->orderBy('name')->get(),
+            'actions' => DocumentActivityLog::query()->distinct()->orderBy('action')->pluck('action'),
+        ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        abort_unless($request->user()?->canAdministerAccess(), 403);
+        $logs = $this->filteredQuery($request)->get();
+
+        return response()->streamDownload(function () use ($logs): void {
+            $output = fopen('php://output', 'wb');
+            fputcsv($output, ['Date', 'Time', 'Document', 'Reference', 'Action', 'Actor', 'Role', 'Changed fields', 'IP address']);
+            foreach ($logs as $log) {
+                fputcsv($output, [
+                    $log->created_at->format('d M Y'), $log->created_at->format('H:i:s'),
+                    $log->document?->title ?? 'Deleted document', $log->document?->reference_number,
+                    ucfirst($log->action), $log->user?->name ?? 'System', $log->user?->actorLabel() ?? 'System',
+                    implode(', ', array_keys($log->new_values ?? [])), $log->ip_address,
+                ]);
+            }
+            fclose($output);
+        }, 'document-audit-log-'.now()->format('Ymd-His').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    private function filteredQuery(Request $request)
+    {
         $query = DocumentActivityLog::with(['document', 'user'])->latest();
 
         if ($request->filled('action')) {
@@ -38,10 +70,6 @@ class DocumentActivityLogController extends Controller
             $query->whereDate('created_at', '<=', $request->date('date_to'));
         }
 
-        return view('document_activity_logs.index', [
-            'logs' => $query->paginate(30)->withQueryString(),
-            'users' => User::where('is_active', true)->orderBy('name')->get(),
-            'actions' => DocumentActivityLog::query()->distinct()->orderBy('action')->pluck('action'),
-        ]);
+        return $query;
     }
 }

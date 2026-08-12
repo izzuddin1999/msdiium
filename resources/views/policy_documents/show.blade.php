@@ -2,6 +2,7 @@
 
 @section('content')
 <style>
+    .version-panel .required-mark{margin-left:3px;color:#dc3545;font-weight:800}
     .document-detail-page{--doc-teal:#008f85;--doc-dark:#123d37;--doc-soft:#eaf7f4}.document-hero{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:25px;margin-bottom:20px;padding:28px 30px;border-radius:15px;background:linear-gradient(125deg,#006f68 0%,#009c92 58%,#34b9aa 100%);color:#fff;box-shadow:0 12px 30px rgba(0,119,109,.2)}.document-hero:after{content:'';position:absolute;width:240px;height:240px;right:-65px;top:-110px;border:42px solid rgba(255,255,255,.08);border-radius:50%}.document-hero>*{position:relative;z-index:1}.document-hero .eyebrow{color:#c9fff7}.document-hero h2{margin:4px 0 8px;color:#fff;font-size:30px;font-weight:800}.hero-meta{display:flex;flex-wrap:wrap;gap:8px}.hero-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;background:rgba(255,255,255,.16);font-size:12px}.hero-chip .material-icons{font-size:15px}.document-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.document-actions .btn{display:inline-flex;align-items:center;gap:6px;min-height:42px;border:0;border-radius:9px;font-weight:650}.document-actions .material-icons{font-size:18px}.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px}.summary-tile{display:flex;align-items:center;gap:12px;padding:16px;background:#fff;border:1px solid #dfeae7;border-radius:11px;box-shadow:0 4px 14px rgba(24,67,61,.05)}.summary-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:10px;background:var(--doc-soft);color:var(--doc-teal)}.summary-tile small{display:block;color:#80908c}.summary-tile strong{display:block;color:var(--doc-dark)}.document-detail-page .card{border:0;border-radius:12px;box-shadow:0 6px 22px rgba(24,67,61,.07);overflow:hidden}.document-detail-page .card-header{padding:17px 22px;background:linear-gradient(90deg,#f1f9f7,#fff);border-bottom:1px solid #dfebe8}.document-detail-page .card-header h5{color:var(--doc-dark);font-weight:750}.record-card .card-body{padding:22px}.record-card .row>.col-md-6{padding:13px 15px}.record-card .row>.col-md-6 strong{display:block;margin-bottom:4px;color:#718580;font-size:11px;text-transform:uppercase;letter-spacing:.055em}.record-card .row>.col-md-6>div{color:#173e38;font-weight:600}.content-panel{padding:18px!important;border:1px solid #dfebe8!important;border-left:4px solid var(--doc-teal)!important;border-radius:9px!important;background:#f8fbfa!important;line-height:1.65}.document-detail-page table thead th{padding:13px 15px;background:#edf6f4;color:#4b6c66;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border:0}.document-detail-page table tbody td{padding:14px 15px;vertical-align:middle;border-color:#e7efed}.document-detail-page table tbody tr:hover{background:#f8fcfb}.version-panel{position:sticky;top:90px}.version-panel .card-header{background:linear-gradient(135deg,#006f68,#009c92);color:#fff}.version-panel .card-header h5{color:#fff}.version-panel .form-control{min-height:44px;border-color:#d9e5e2;border-radius:8px}.version-panel .form-label{color:#244a44;font-weight:650}.custom-template-card{border-top:4px solid #7367d9!important}@media(max-width:1199px){.summary-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:767px){.document-hero{align-items:flex-start;flex-direction:column;padding:22px}.document-actions{justify-content:flex-start}.summary-grid{grid-template-columns:1fr}.document-hero h2{font-size:24px}}
     /* Override the theme's percentage card height so long records remain in normal flow. */
     .document-detail-page>.row{align-items:flex-start}
@@ -49,7 +50,63 @@
         .booklet-shell iframe{height:500px!important}
     }
     .version-panel-launch{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#006f68,#009c92);color:#fff}.version-panel-launch-copy{display:flex;align-items:center;gap:12px}.version-panel-launch-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:11px;background:rgba(255,255,255,.15)}.version-panel-launch h5{margin:0;color:#fff}.version-panel-launch p{margin:3px 0 0;color:#c9eee9;font-size:11px}.version-panel-launch .btn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-weight:750}.version-form-shell{display:none}.version-panel.is-open .version-form-shell{display:block}.version-panel.is-open .version-panel-launch{display:none}.version-form-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.version-form-heading .btn{display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:8px}.version-content-field{min-height:145px!important}.version-panel .card-footer{display:flex;gap:9px}.version-panel .card-footer .btn-primary{flex:1}.version-panel .card-footer .btn-light{flex:0 0 auto}@media(max-width:575px){.version-panel-launch{align-items:flex-start;flex-direction:column}.version-panel-launch .btn{width:100%;justify-content:center}}
+    .version-panel .resizable-textarea{width:100%;max-width:100%;min-width:min(240px,100%);min-height:120px;resize:both;overflow:auto}
+    .version-panel .resize-hint{display:flex;align-items:center;gap:4px;margin-top:5px;color:#71847f;font-size:10px}
+    .version-panel .resize-hint .material-icons{font-size:13px}
+    .pdf-access-badge{display:inline-flex!important;align-items:center;gap:4px;width:max-content;margin-top:5px!important;padding:3px 7px;border-radius:999px;background:#e5f6f2;color:#087d72!important;font-size:9px!important;font-weight:750;text-transform:uppercase;letter-spacing:.045em}.pdf-access-badge .material-icons{font-size:12px}
+    .historical-version-banner{order:0;display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px;padding:14px 16px;border:1px solid #d9cff1;border-left:5px solid #7655b7;border-radius:11px;background:linear-gradient(90deg,#f5f1fc,#fff);color:#4f3b78}.historical-version-copy{display:flex;align-items:center;gap:11px}.historical-version-copy>.material-icons{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:10px;background:#e9e1f8;color:#6546a8}.historical-version-copy strong,.historical-version-copy small{display:block}.historical-version-copy small{margin-top:2px;color:#756890}.historical-version-banner .btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}@media(max-width:767px){.historical-version-banner{align-items:flex-start;flex-direction:column}.historical-version-banner .btn{width:100%;justify-content:center}}
     .footer{position:relative!important;clear:both!important;bottom:auto!important}
+</style>
+<style>
+    /* Compact governed-record workspace matching the approved detail design. */
+    .document-detail-page{--detail-teal:#006b70;gap:0}.breadcrumb-flow{display:none}
+    .document-hero{min-height:132px;margin:0 0 12px;padding:17px 20px;border:1px solid #006d70;border-radius:10px;background:linear-gradient(118deg,#003f47,#006d70 72%,#087f7d);box-shadow:0 5px 14px rgba(0,62,67,.18)}
+    .document-hero:after{right:-50px;top:-100px;width:230px;height:230px;border-width:28px;opacity:.72}.document-hero .eyebrow{display:inline-flex;padding:3px 8px;border-radius:5px;background:#1d73c9;color:#fff;font-size:9px;font-weight:800;text-transform:uppercase}
+    .document-hero h2{max-width:780px;margin:7px 0 8px;font-size:20px;line-height:1.14}.hero-meta{gap:6px}.hero-chip{padding:4px 8px;font-size:9px}.hero-chip .material-icons{font-size:12px}
+    .document-actions{max-width:440px;align-items:center}.document-actions .btn{min-height:32px;padding:7px 11px;border-radius:6px;font-size:10px;box-shadow:none}.document-actions .material-icons{font-size:14px}.document-actions .btn-dark{display:none}.document-actions form{margin:0}
+    .summary-grid{gap:0;margin:0 0 10px;overflow:hidden;border:1px solid #e0e7ea;border-radius:9px;background:#fff;box-shadow:0 3px 10px rgba(31,42,55,.05)}
+    .summary-tile{min-height:68px;padding:11px 16px;border:0;border-right:1px solid #e7ecef;border-radius:0;box-shadow:none}.summary-tile:last-child{border-right:0}.summary-icon{flex-basis:34px;height:34px;border-radius:7px}.summary-icon.material-icons{font-size:18px}.summary-tile small{font-size:8px;text-transform:uppercase;letter-spacing:.04em}.summary-tile strong{font-size:11px}.summary-tile strong:after{display:block;margin-top:2px;color:#667085;font-size:8px;font-weight:500}
+    .staff-reading-layout{display:grid!important;grid-template-columns:minmax(350px,39%) minmax(0,61%);gap:10px!important;margin:0!important}.staff-reading-layout>[class*="col-"]{width:auto!important;max-width:none!important;padding:0!important}
+    .staff-reading-layout>.col-lg-8>.card:not(.record-card),.staff-reading-layout>.booklet-column>.version-panel{display:none!important}.record-card{height:500px!important;margin:0!important;border:1px solid #e0e7ea!important;border-radius:9px!important;box-shadow:0 3px 12px rgba(31,42,55,.06)!important}.record-card .card-header{min-height:42px;padding:12px 14px;background:#fff}.record-card .card-header h5{font-size:12px;text-transform:uppercase}.record-card .card-header h5:after{content:'';display:block;width:92px;margin-top:7px;border-bottom:2px solid #008f86}
+    .record-card .card-body{height:456px;padding:8px 12px;overflow:auto}.record-card .card-body>.row{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px!important}.record-card .row>.col-md-6{padding:7px 4px;border:0;border-bottom:1px solid #e7ecef;border-radius:0;background:#fff}.record-card .row>.col-md-6 strong{display:inline-flex;width:47%;margin:0;color:#344054;font-size:8px;letter-spacing:0;text-transform:none}.record-card .row>.col-md-6>div{display:inline;color:#344054;font-size:9px}.record-card .row>.col-12{display:none}
+    .booklet-column{position:static}.booklet-preview{height:500px;margin:0!important;border:1px solid #e0e7ea!important;border-top:1px solid #e0e7ea!important;border-radius:9px!important;box-shadow:0 3px 12px rgba(31,42,55,.06)!important}.booklet-preview .card-header{min-height:52px;padding:8px 12px!important;background:#fff!important}.pdf-preview-icon{width:25px;height:25px;flex-basis:25px;border-radius:5px}.pdf-preview-icon .material-icons{font-size:16px}.pdf-preview-heading strong{font-size:11px;text-transform:uppercase}.pdf-preview-heading small{font-size:8px}.pdf-access-badge{margin-top:2px!important;padding:2px 5px;font-size:6px!important}.booklet-preview .card-header .btn{padding:5px 9px;font-size:8px}.booklet-shell{height:447px;padding:7px!important;background:#242424}.booklet-shell:before,.booklet-shell:after{display:none}.booklet-shell iframe{height:433px!important;min-height:0!important;border-radius:0;box-shadow:none}
+    .detail-tab-card{margin-top:10px;border:1px solid #e0e7ea;border-radius:9px;background:#fff;box-shadow:0 3px 12px rgba(31,42,55,.05)}.detail-tabs{display:flex;align-items:center;gap:24px;height:40px;padding:0 14px;border-bottom:1px solid #e3e9ec}.detail-tab{position:relative;height:40px;padding:0;border:0;background:none;color:#344054;font-size:9px;font-weight:650}.detail-tab.active{color:#006b70}.detail-tab.active:after{content:'';position:absolute;left:0;right:0;bottom:0;border-bottom:2px solid #008f86}.detail-tab-panel{display:none;padding:7px}.detail-tab-panel.active{display:block}.detail-tab-panel>.card{margin:0!important;box-shadow:none!important;border:1px solid #e0e7ea!important}.detail-tab-panel>.card+.card{margin-top:8px!important}.detail-related{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #dfe7ea;border-radius:7px;background:#fbfdfd}.detail-related-main{display:flex;align-items:center;gap:9px}.detail-related-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:6px;background:#e7f7ef;color:#0a9b5c}.detail-related strong,.detail-related small{display:block}.detail-related strong{font-size:9px}.detail-related small{margin-top:2px;color:#667085;font-size:7px}.detail-related .btn{padding:5px 9px;font-size:8px}
+    @media(max-width:991px){.staff-reading-layout{grid-template-columns:1fr}.record-card,.booklet-preview{height:auto!important}.record-card .card-body{height:auto;max-height:500px}.booklet-shell{height:auto}.booklet-shell iframe{height:560px!important}.detail-tabs{overflow-x:auto}.summary-grid{grid-template-columns:repeat(2,1fr)}.summary-tile:nth-child(2){border-right:0}}
+    @media(max-width:575px){.document-hero{align-items:flex-start;min-height:0}.document-hero h2{font-size:17px}.summary-grid{grid-template-columns:1fr}.summary-tile{border-right:0;border-bottom:1px solid #e7ecef}.record-card .card-body>.row{grid-template-columns:1fr}}
+</style>
+<style>
+    /* Keep one strong identity surface and let records/PDFs carry the visual focus. */
+    .document-detail-page{--doc-dark:#202b39;--doc-soft:#f3f6f8}
+    .document-hero{background:linear-gradient(125deg,#1f2937 0%,#344054 72%,#008f86 100%);box-shadow:0 12px 30px rgba(31,42,55,.18)}
+    .summary-tile{border-color:#e1e6eb;box-shadow:0 6px 18px rgba(31,42,55,.06)}
+    .summary-icon{background:#edf6ff;color:#1576bd}
+    .document-detail-page .card{box-shadow:0 8px 24px rgba(31,42,55,.07)}
+    .document-detail-page .card-header{background:linear-gradient(90deg,#f8fafc,#fff);border-color:#e4e7ec}
+    .version-panel .card-header{background:linear-gradient(135deg,#1f2937,#344054)}
+    .content-panel{border-color:#e1e6eb!important;background:#f8fafc!important}
+    .document-detail-page table thead th{background:#f4f6f8;color:#475467}
+    .document-detail-page table tbody tr:hover{background:#f8fafc}
+</style>
+<style>
+    .record-card .row > .document-content-row {
+        display: block;
+        grid-column: 1 / -1;
+        padding: 10px 4px;
+    }
+    .record-card .document-content-row > strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #344054;
+        font-size: 9px;
+        text-transform: uppercase;
+    }
+    .record-card .document-content-row .content-panel {
+        max-height: none;
+        margin: 0 !important;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
 </style>
 @php
     $displayTitle = trim($document->title, " -\t\n\r\0\x0B") !== '' ? $document->title : (($document->document_type === 'circular' ? 'Untitled Circular' : 'Untitled Document'));
@@ -69,6 +126,19 @@
 @endphp
 <div class="breadcrumb-flow"><a href="{{ route('dashboard') }}">Dashboard</a><span class="material-icons">chevron_right</span><a href="{{ route('policy-documents.index') }}">Documents</a><span class="material-icons">chevron_right</span><span>{{ $displayTitle }}</span></div>
 <div class="document-detail-page">
+@if($document->status === 'superseded')
+    <div class="historical-version-banner" role="status">
+        <div class="historical-version-copy">
+            <span class="material-icons">history</span>
+            <span><strong>You are viewing superseded Version {{ $document->version_number }}</strong><small>This historical record is read-only and is no longer the active publication.</small></span>
+        </div>
+        @if($activeVersion && $activeVersion->id !== $document->id)
+            <a href="{{ route('policy-documents.show', $activeVersion) }}" class="btn btn-primary"><span class="material-icons">verified</span>Open active Version {{ $activeVersion->version_number }}</a>
+        @else
+            <a href="{{ route('policy-documents.index') }}" class="btn btn-secondary"><span class="material-icons">arrow_back</span>Back to repository</a>
+        @endif
+    </div>
+@endif
 <div class="document-hero">
     <div>
         <span class="eyebrow">{{ $document->reference_number ?: 'Unreferenced record' }}</span>
@@ -99,7 +169,7 @@
 </div>
 
 <div class="summary-grid">
-    <div class="summary-tile"><span class="summary-icon material-icons">admin_panel_settings</span><div><small>Access scope</small><strong>{{ strtoupper($document->access_scope) }}</strong></div></div>
+    <div class="summary-tile"><span class="summary-icon material-icons">admin_panel_settings</span><div><small>Permitted users</small><strong>{{ $document->access_scope === 'all' ? 'All permitted users' : strtoupper($document->access_scope).' permitted users' }}</strong></div></div>
     <div class="summary-tile"><span class="summary-icon material-icons">person</span><div><small>Record owner</small><strong>{{ $document->owner_report ?: strtoupper($document->owner_unit) }}</strong></div></div>
     <div class="summary-tile"><span class="summary-icon material-icons">event_available</span><div><small>Effective date</small><strong>{{ $document->effective_date?->format('d M Y') ?? 'Not set' }}</strong></div></div>
     <div class="summary-tile"><span class="summary-icon material-icons">event_busy</span><div><small>Expiry date</small><strong>{{ $document->expiry_date?->format('d M Y') ?? 'No expiry' }}</strong></div></div>
@@ -123,8 +193,8 @@
                         <div>{{ $document->reference_number ?? 'Not assigned' }}</div>
                     </div>
                     <div class="col-md-6">
-                        <strong>Access Scope</strong>
-                        <div>{{ strtoupper($document->access_scope) }}</div>
+                        <strong>Permitted Users</strong>
+                        <div>{{ $document->access_scope === 'all' ? 'All permitted users' : strtoupper($document->access_scope).' permitted users' }}</div>
                     </div>
                     <div class="col-md-6">
                         <strong>Public Flag</strong>
@@ -184,7 +254,7 @@
                         <strong>Expiry Date</strong>
                         <div>{{ $document->expiry_date?->format('d M Y') ?? 'Not set' }}</div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 document-content-row">
                         <strong>Content</strong>
                         <div class="content-panel mt-2">
                             {!! nl2br(e($document->content ?: 'No content provided.')) !!}
@@ -364,8 +434,8 @@
                         <span class="pdf-preview-icon"><span class="material-icons">menu_book</span></span>
                         <div>
                             <strong>Document preview</strong>
-                            <small>{{ $document->file_original_name ?: 'Attached PDF document' }}</small>
-                            <span class="booklet-label"><span class="material-icons">auto_stories</span>Interactive PDF reader</span>
+                            <small>{{ $initialPdf?->file_name ?: ($document->file_original_name ?: 'Attached PDF document') }}</small>
+                            <span class="pdf-access-badge"><span class="material-icons">{{ $initialPdf?->is_public === false ? 'admin_panel_settings' : 'groups' }}</span>{{ $initialPdf?->is_public === false ? 'Policy managers & system administrators' : 'Permitted users' }}</span>
                         </div>
                     </div>
                     <a href="{{ $initialPreviewUrl }}" target="_blank" class="btn btn-sm btn-outline-primary" id="bookletFullScreen">
@@ -420,13 +490,15 @@
                     @endif
                     <div class="card-body row g-3">
                         <div class="col-12">
-                            <label class="form-label">Content</label>
-                            <textarea name="content" class="form-control version-content-field" rows="5" placeholder="Enter the complete content for this new version.">{{ old('content') }}</textarea>
+                            <label class="form-label" for="newVersionContent">Content <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+                            <textarea id="newVersionContent" name="content" class="form-control version-content-field resizable-textarea" rows="5" placeholder="Enter the complete content for this new version." required>{{ old('content') }}</textarea>
                             <small class="text-muted">This field starts blank so the previous version remains unchanged.</small>
+                            <small class="resize-hint"><span class="material-icons">open_in_full</span>Drag the lower-right corner to resize this field.</small>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Revision Summary</label>
-                            <textarea name="revision_summary" class="form-control" rows="3" placeholder="Explain what changed in this new version.">{{ old('revision_summary') }}</textarea>
+                            <textarea name="revision_summary" class="form-control resizable-textarea" rows="3" placeholder="Explain what changed in this new version.">{{ old('revision_summary') }}</textarea>
+                            <small class="resize-hint"><span class="material-icons">open_in_full</span>Drag the lower-right corner to resize this field.</small>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Effective Date</label>
@@ -438,7 +510,15 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label">Remarks</label>
-                            <textarea name="remarks" class="form-control" rows="3" placeholder="Optional remarks for this version.">{{ old('remarks') }}</textarea>
+                            <textarea name="remarks" class="form-control resizable-textarea" rows="3" placeholder="Optional remarks for this version.">{{ old('remarks') }}</textarea>
+                            <small class="resize-hint"><span class="material-icons">open_in_full</span>Drag the lower-right corner to resize this field.</small>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="public_flag" value="1" id="newVersionPublic" @checked(old('public_flag', $document->public_flag))>
+                                <label class="form-check-label" for="newVersionPublic">Show this version on the public portal</label>
+                            </div>
+                            <small class="text-muted">The version must also be published with access available to all permitted users.</small>
                         </div>
                         <div class="col-12">
                             <label class="form-label">PDFs from Version {{ $document->version_number }}</label>
@@ -481,12 +561,6 @@
                             </div>
                             <div class="selected-pdf-list" id="selectedPdfList"></div>
                         </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="is_circular" value="1" id="newVersionCircular" @checked($document->is_circular)>
-                                <label class="form-check-label" for="newVersionCircular">Keep marked as circular</label>
-                            </div>
-                        </div>
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary">Create Version {{ $document->version_number + 1 }}</button>
@@ -509,8 +583,51 @@
 </div>
 </div>
 
+<section class="detail-tab-card" aria-label="Document supporting information">
+    <nav class="detail-tabs">
+        <button class="detail-tab active" type="button" data-detail-tab="related" aria-selected="true">Related Documents</button>
+        <button class="detail-tab" type="button" data-detail-tab="versions" aria-selected="false">Version History</button>
+        <button class="detail-tab" type="button" data-detail-tab="attachments" aria-selected="false">Attachment(s)</button>
+        <button class="detail-tab" type="button" data-detail-tab="audit" aria-selected="false">Audit Trail</button>
+    </nav>
+    <div class="detail-tab-panel active" data-detail-panel="related">
+        <div class="detail-related">
+            <div class="detail-related-main"><span class="detail-related-icon material-icons">description</span><span><strong>{{ $activeVersion && $activeVersion->id !== $document->id ? $activeVersion->title : $displayTitle }}</strong><small>{{ $activeVersion && $activeVersion->id !== $document->id ? 'Current active document in this version family' : 'Current governed document record' }} &nbsp; • &nbsp; Effective from: {{ ($activeVersion?->effective_date ?? $document->effective_date)?->format('d M Y') ?? 'Not set' }}</small></span></div>
+            <a href="{{ route('policy-documents.show', $activeVersion ?: $document) }}" class="btn btn-outline-primary">View Document <span class="material-icons align-middle" style="font-size:12px">open_in_new</span></a>
+        </div>
+    </div>
+    <div class="detail-tab-panel" data-detail-panel="versions"><div class="text-center py-3 text-muted detail-panel-empty">No version information available.</div></div>
+    <div class="detail-tab-panel" data-detail-panel="attachments"><div class="text-center py-3 text-muted detail-panel-empty">No attachments registered.</div></div>
+    <div class="detail-tab-panel" data-detail-panel="audit"><div class="text-center py-3 text-muted detail-panel-empty">No audit information available.</div></div>
+</section>
+
 <script>
     (function () {
+        const detailPanels = Object.fromEntries(Array.from(document.querySelectorAll('[data-detail-panel]')).map((panel) => [panel.dataset.detailPanel, panel]));
+        const moveCardToPanel = (heading, panelName) => {
+            const card = Array.from(document.querySelectorAll('.staff-reading-layout .card')).find((candidate) => candidate.querySelector('.card-header h5')?.textContent.trim() === heading);
+            const panel = detailPanels[panelName];
+            if (!card || !panel) return;
+            panel.querySelector('.detail-panel-empty')?.remove();
+            panel.appendChild(card);
+        };
+        moveCardToPanel('Version History', 'versions');
+        moveCardToPanel('Attachment Register', 'attachments');
+        moveCardToPanel('Activity Audit Trail', 'audit');
+        const versionCreator = document.getElementById('new-version');
+        if (versionCreator && detailPanels.versions) {
+            detailPanels.versions.querySelector('.detail-panel-empty')?.remove();
+            detailPanels.versions.appendChild(versionCreator);
+        }
+        document.querySelectorAll('[data-detail-tab]').forEach((tab) => tab.addEventListener('click', () => {
+            document.querySelectorAll('[data-detail-tab]').forEach((item) => {
+                const selected = item === tab;
+                item.classList.toggle('active', selected);
+                item.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+            Object.entries(detailPanels).forEach(([name, panel]) => panel.classList.toggle('active', name === tab.dataset.detailTab));
+        }));
+
         const versionPanel = document.getElementById('new-version');
         const versionForm = document.getElementById('newVersionForm');
         const setVersionFormOpen = (open) => {
@@ -653,7 +770,6 @@
             });
         });
 
-        filterSubtopics();
     })();
 </script>
 @endsection

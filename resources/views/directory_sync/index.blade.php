@@ -10,9 +10,9 @@
             <div class="card-header"><h5>Import directory export</h5><small>Paste comma-separated HURIS data using the required header.</small></div>
             <form action="{{ route('directory-sync.store') }}" method="POST">@csrf
                 <div class="card-body">
-                    <div class="alert alert-info"><strong>Required header</strong><br><code>staff_id,cas_username,name,email,unit</code><br><small>Allowed units: all, msd, kcdiom. Existing roles are never overwritten.</small></div>
+                    <div class="alert alert-info"><strong>Required header</strong><br><code>staff_id,cas_username,name,email,unit</code><br><small>Optional: <code>organization_code</code> for a specific Kulliyyah/Centre/Division/Institute/Office. Without it, records use the MSD or KCDIOM root organization. Existing roles are never overwritten.</small></div>
                     <label class="form-label">CSV Data</label>
-                    <textarea name="csv_data" class="form-control font-monospace" rows="13" required placeholder="staff_id,cas_username,name,email,unit&#10;ST1001,ahmad.ali,Ahmad Ali,ahmad.ali@iium.edu.my,msd">{{ old('csv_data') }}</textarea>
+                    <textarea name="csv_data" class="form-control font-monospace" rows="13" required placeholder="staff_id,cas_username,name,email,unit,organization_code&#10;ST1001,ahmad.ali,Ahmad Ali,ahmad.ali@iium.edu.my,kcdiom,KCDIOM">{{ old('csv_data') }}</textarea>
                 </div>
                 <div class="card-footer"><button class="btn btn-primary w-100">Validate and synchronize</button></div>
             </form>

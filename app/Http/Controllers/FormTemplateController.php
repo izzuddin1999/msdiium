@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FormField;
 use App\Models\FormTemplate;
 use App\Models\LookupValue;
+use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -21,8 +22,9 @@ class FormTemplateController extends Controller
     public function index(Request $request): View
     {
         $this->authorizeManager($request);
-        $query = FormTemplate::with(['fields', 'creator'])->latest();
-        if ($request->user()->isKcdiomLiaison()) $query->where('owner_unit', 'kcdiom');
+        $query = FormTemplate::with(['fields', 'creator'])
+            ->where('owner_unit', $this->organization($request))
+            ->latest();
 
         return view('form_templates.index', [
             'templates' => $query->get(),
@@ -41,7 +43,9 @@ class FormTemplateController extends Controller
             'columns' => ['required', 'integer', 'between:1,3'],
             'is_active' => ['nullable', 'boolean'],
         ]);
-        if ($request->user()->isKcdiomLiaison()) $data['owner_unit'] = 'kcdiom';
+        $data['owner_unit'] = $this->organization($request);
+        $data['organization_id'] = $request->user()?->organization_id
+            ?: Organization::idForLegacyUnit($data['owner_unit']);
         $data['slug'] = $this->uniqueSlug($data['name']);
         $data['is_active'] = (bool) ($data['is_active'] ?? false);
         $data['created_by'] = $request->user()->id;
@@ -71,7 +75,9 @@ class FormTemplateController extends Controller
             'document_type' => ['nullable', 'string', 'max:50'], 'owner_unit' => ['required', 'in:msd,kcdiom'],
             'columns' => ['required', 'integer', 'between:1,3'], 'is_active' => ['nullable', 'boolean'],
         ]);
-        if ($request->user()->isKcdiomLiaison()) $data['owner_unit'] = 'kcdiom';
+        $data['owner_unit'] = $this->organization($request);
+        $data['organization_id'] = $request->user()?->organization_id
+            ?: Organization::idForLegacyUnit($data['owner_unit']);
         $data['is_active'] = (bool) ($data['is_active'] ?? false);
         $formTemplate->update($data);
         return back()->with('status', 'Template settings updated.');
@@ -194,7 +200,7 @@ class FormTemplateController extends Controller
     private function authorizeTemplate(Request $request, FormTemplate $template): void
     {
         $this->authorizeManager($request);
-        abort_if($request->user()->isKcdiomLiaison() && $template->owner_unit !== 'kcdiom', 403);
+        abort_unless($template->owner_unit === $this->organization($request), 404);
     }
     private function uniqueSlug(string $name): string
     {
@@ -202,14 +208,19 @@ class FormTemplateController extends Controller
         while (FormTemplate::where('slug', $slug)->exists()) $slug = $base.'-'.$i++;
         return $slug;
     }
-    private function documentTypes() { return LookupValue::where('type', 'DOCUMENT_TYPE')->where('is_active', true)->orderBy('sort_order')->pluck('description', 'code')->whenEmpty(fn () => collect(['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular'])); }
+    private function documentTypes() { return LookupValue::where('type', 'DOCUMENT_TYPE')->where('owner_unit', $this->organization(request()))->where('is_active', true)->orderBy('sort_order')->pluck('description', 'code')->whenEmpty(fn () => collect(['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular'])); }
     private function dataSources(): array
     {
         $sources = self::DATA_SOURCES;
-        LookupValue::query()->where('is_active', true)->distinct()->orderBy('type')->pluck('type')->each(function ($type) use (&$sources): void {
+        LookupValue::query()->where('owner_unit', $this->organization(request()))->where('is_active', true)->distinct()->orderBy('type')->pluck('type')->each(function ($type) use (&$sources): void {
             $sources['lov:'.$type] = 'LOV: '.str_replace('_', ' ', $type);
         });
         return $sources;
+    }
+
+    private function organization(Request $request): string
+    {
+        return $request->user()?->unit === 'kcdiom' ? 'kcdiom' : 'msd';
     }
 
     private function systemBindings(): array
@@ -237,8 +248,7 @@ class FormTemplateController extends Controller
             ['label'=>'Owner / Reporting Officer','binding'=>'owner_report','type'=>'text','section'=>'Ownership and access','width'=>1,'is_required'=>false],
             ['label'=>'Creator','binding'=>'created_by','type'=>'select','section'=>'Ownership and access','width'=>1,'is_required'=>true,'data_source'=>'users'],
             ['label'=>'Access Scope','binding'=>'access_scope','type'=>'select','section'=>'Ownership and access','width'=>1,'is_required'=>true,'data_source'=>'access_scopes'],
-            ['label'=>'Set as Circular','binding'=>'is_circular','type'=>'checkbox','section'=>'Ownership and access','width'=>1,'is_required'=>false],
-            ['label'=>'Publicly Visible','binding'=>'public_flag','type'=>'checkbox','section'=>'Ownership and access','width'=>1,'is_required'=>false],
+            ['label'=>'Show on Public Portal','binding'=>'public_flag','type'=>'checkbox','section'=>'Ownership and access','width'=>1,'is_required'=>false],
             ['label'=>'Content','binding'=>'content','type'=>'textarea','section'=>'Content and validity','width'=>3,'is_required'=>true],
             ['label'=>'Effective Date','binding'=>'effective_date','type'=>'date','section'=>'Content and validity','width'=>1,'is_required'=>false],
             ['label'=>'Expiry Date','binding'=>'expiry_date','type'=>'date','section'=>'Content and validity','width'=>1,'is_required'=>false],

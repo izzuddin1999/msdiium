@@ -5,9 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class LookupValue extends Model
+class OrganizationProfile extends Model
 {
-    protected $fillable = ['type', 'owner_unit', 'organization_id', 'code', 'description', 'sort_order', 'is_active'];
+    protected $fillable = [
+        'code',
+        'organization_id',
+        'name',
+        'short_name',
+        'description',
+        'contact_email',
+        'contact_phone',
+        'office_location',
+        'website',
+        'is_active',
+    ];
 
     protected function casts(): array
     {

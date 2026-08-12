@@ -8,8 +8,10 @@
     <link rel="shortcut icon" type="image/png" href="https://style.iium.edu.my/images/iium/iium-logo.png">
     <link href="https://style.iium.edu.my/css/style.css" rel="stylesheet">
     <link href="https://style.iium.edu.my/css/iium.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
     <link href="https://style.iium.edu.my/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/portal-theme.css') }}">
 </head>
 <body>
     @php($viewer = auth()->user())

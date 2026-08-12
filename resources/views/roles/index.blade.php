@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@php($roleOptions = [
+    'system_admin' => 'System Administrator',
+    'msd_admin' => 'MSD Administrator',
+    'policy_manager' => 'Policy Manager',
+    'kcdiom_liaison' => 'KCDIOM Liaison',
+    'staff_user' => 'Staff User',
+])
 <div class="breadcrumb-flow"><a href="{{ route('dashboard') }}">Dashboard</a><span class="material-icons">chevron_right</span><span>Access roles</span></div>
 <div class="page-heading"><div><span class="eyebrow">Identity governance</span><h2>Access roles</h2><p>Link CAS identities to application roles, units, and active access.</p></div></div>
 <div class="row">
@@ -31,7 +38,7 @@
                     <div class="col-12">
                         <label class="form-label">Role</label>
                         <select name="role" class="form-control" required>
-                            @foreach(['system_admin' => 'System Administrator', 'policy_manager' => 'Policy Manager (MSD/KCDIOM)', 'staff_user' => 'Staff/Public'] as $value => $label)
+                            @foreach($roleOptions as $value => $label)
                                 <option value="{{ $value }}" @selected(old('role') === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
@@ -83,7 +90,7 @@
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td>{{ $user->staff_id ?? '-' }}<br><small>{{ $user->cas_username ?? 'Not linked' }}</small></td>
-                                <td>{{ str_replace('_', ' ', strtoupper($user->role)) }}</td>
+                                <td>{{ $roleOptions[$user->role] ?? str($user->role)->replace('_', ' ')->title() }}</td>
                                 <td>{{ strtoupper($user->unit) }}</td>
                                 <td><span class="status-pill {{ $user->is_active ? 'status-published' : 'status-inactive' }}">{{ $user->is_active ? 'Active' : 'Inactive' }}</span></td>
                                 <td>
@@ -94,7 +101,7 @@
                                         <input type="hidden" name="cas_username" value="{{ $user->cas_username }}">
                                         <div class="col-md-4">
                                             <select name="role" class="form-control" required>
-                                                @foreach(['system_admin' => 'System Administrator', 'policy_manager' => 'Policy Manager (MSD/KCDIOM)', 'staff_user' => 'Staff/Public'] as $value => $label)
+                                                @foreach($roleOptions as $value => $label)
                                                     <option value="{{ $value }}" @selected($user->role === $value)>{{ $label }}</option>
                                                 @endforeach
                                             </select>

@@ -13,8 +13,6 @@ class PortalAssistantController extends Controller
     {
         $viewer = $request->user();
 
-        abort_unless($viewer && ! $viewer->canManagePolicies(), 403);
-
         $data = $request->validate([
             'question' => ['required', 'string', 'min:2', 'max:1000'],
             'history' => ['sometimes', 'array', 'max:6'],

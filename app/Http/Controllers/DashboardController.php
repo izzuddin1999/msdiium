@@ -21,6 +21,7 @@ class DashboardController extends Controller
             'total' => (clone $visible)->count(),
             'published' => (clone $visible)->where('status', 'published')->count(),
             'draft' => (clone $visible)->where('status', 'draft')->count(),
+            'superseded' => (clone $visible)->where('status', 'superseded')->count(),
             'circulars' => (clone $visible)->where('is_circular', true)->count(),
             'expiring' => (clone $visible)
                 ->whereNotNull('expiry_date')
@@ -44,6 +45,7 @@ class DashboardController extends Controller
                 ->get(),
             'topicOverview' => $isSystemAdministrator
                 ? TopicCategory::query()
+                    ->where('owner_unit', $viewer?->unit === 'kcdiom' ? 'kcdiom' : 'msd')
                     ->where('is_active', true)
                     ->with([
                         'subtopics' => fn ($query) => $query
@@ -51,13 +53,14 @@ class DashboardController extends Controller
                             ->withCount(['details' => fn ($detailQuery) => $detailQuery->where('is_active', true)])
                             ->orderBy('name'),
                     ])
-                    ->withCount('documents')
+                    ->withCount(['documents' => fn ($query) => $query->where('owner_unit', $viewer?->unit === 'kcdiom' ? 'kcdiom' : 'msd')])
                     ->orderBy('name')
                     ->get()
                 : collect(),
             'recentActivity' => $isSystemAdministrator
                 ? DocumentActivityLog::query()
                     ->with(['document:id,title', 'user:id,name'])
+                    ->whereHas('document', fn ($query) => $query->where('owner_unit', $viewer?->unit === 'kcdiom' ? 'kcdiom' : 'msd'))
                     ->latest()
                     ->limit(5)
                     ->get()

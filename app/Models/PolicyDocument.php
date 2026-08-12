@@ -14,6 +14,17 @@ class PolicyDocument extends Model
 
     protected $table = 'hr_intern.policy_documents';
 
+    public function getTable()
+    {
+        // The local SQLite workspace attaches the same database under the
+        // production schema name for read compatibility. Writes must use the
+        // main table name so observers can save history and audit rows without
+        // SQLite treating the two names as competing database connections.
+        return config('database.default') === 'sqlite'
+            ? 'policy_documents'
+            : parent::getTable();
+    }
+
     protected $fillable = [
         'title',
         'reference_number',
@@ -29,6 +40,7 @@ class PolicyDocument extends Model
         'access_scope',
         'public_flag',
         'owner_unit',
+        'organization_id',
         'owner_report',
         'status',
         'is_circular',
@@ -66,6 +78,11 @@ class PolicyDocument extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     public function parent(): BelongsTo
@@ -133,6 +150,21 @@ class PolicyDocument extends Model
         return $query->where('status', 'published');
     }
 
+    /** Keep one current row per document family for dashboards and repositories. */
+    public function scopeLatestInFamily(Builder $query, ?array $statuses = null): Builder
+    {
+        return $query->whereNotExists(function ($newer) use ($statuses): void {
+            $newer->selectRaw('1')
+                ->from((new self)->getTable().' as newer_family_version')
+                ->whereRaw('COALESCE(newer_family_version.parent_document_id, newer_family_version.id) = COALESCE(policy_documents.parent_document_id, policy_documents.id)')
+                ->whereColumn('newer_family_version.version_number', '>', 'policy_documents.version_number');
+
+            if ($statuses !== null) {
+                $newer->whereIn('newer_family_version.status', $statuses);
+            }
+        });
+    }
+
     public function statusLabel(): string
     {
         return match ($this->status) {
@@ -149,10 +181,10 @@ class PolicyDocument extends Model
         }
 
         if ($user->canManagePolicies()) {
-            return $query;
+            return $query->where('owner_unit', $user->unit === 'kcdiom' ? 'kcdiom' : 'msd');
         }
 
-        return $query->published()->where(function (Builder $builder) use ($user): void {
+        return $query->whereIn('status', ['published', 'superseded'])->where(function (Builder $builder) use ($user): void {
             $builder->where('access_scope', 'all');
 
             if (in_array($user->unit, ['msd', 'kcdiom'], true)) {

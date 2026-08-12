@@ -33,6 +33,31 @@
     @media(max-width:1100px){.circular-document-row{grid-template-columns:minmax(250px,1.5fr) minmax(130px,.7fr) auto 42px}.circular-document-row>.circular-meta:nth-of-type(2){display:none}}
     @media(max-width:767px){.circular-report-summary{grid-template-columns:1fr}.circular-results-heading{align-items:flex-start;flex-direction:column}.classified-repository{padding:9px}.classification-category-header{padding:13px}.classification-count{display:none}.circular-document-row{grid-template-columns:minmax(0,1fr) 40px;gap:10px}.circular-document-main{grid-column:1/-1}.circular-document-row>.circular-meta{grid-column:1}.circular-document-row>.circular-meta:nth-of-type(2){display:block}.circular-document-row>div:nth-last-child(2){grid-column:1}.circular-document-row>.circular-view{grid-column:2;grid-row:1}.classification-subtopic-heading{align-items:flex-start;flex-direction:column}}
 </style>
+<style>
+    /* Circular report follows the same neutral repository hierarchy. */
+    .circular-report-metric,.circular-repository{border-color:#e1e6eb;box-shadow:0 8px 24px rgba(31,42,55,.06)}
+    .circular-report-metric .material-icons,.circular-results-heading strong .material-icons{background:#edf6ff;color:#1576bd}
+    .circular-results-heading{background:linear-gradient(90deg,#fff,#f8fafc);border-color:#e4e7ec}
+    .classified-repository{background:#f7f9fb}
+    .classification-category{border-color:#dfe5ea;box-shadow:0 8px 22px rgba(31,42,55,.06)}
+    .classification-category-header{position:relative;background:#fff;color:#202b39;border-bottom:1px solid #e4e7ec}
+    .classification-category-header:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:#008f86}
+    .classification-category[open]>.classification-category-header{background:#f8fbfd}
+    .category-monogram{background:#edf6ff;color:#1576bd}
+    .classification-label{color:#008f86;opacity:1}
+    .classification-category-header h4{color:#202b39}
+    .classification-count{background:#eef2f6;color:#475467}
+    .classification-toggle{color:#667085}
+    .classification-main-topic{border-color:#e4e7ec;background:#fff}
+    .classification-heading-title{color:#344054}
+    .classification-heading-title .material-icons{background:#edf6ff;color:#1576bd}
+    .main-summary-actions .classification-count{background:#f2f4f7;color:#475467}
+    .classification-subtopic{border-color:#e4e7ec}
+    .classification-subtopic-heading{border-color:#e4e7ec;background:#f8fafc;color:#344054}
+    .subtopic-marker{background:#159cf5}
+    .circular-document-row:hover{background:#f7fbff;box-shadow:inset 4px 0 #159cf5}
+    .uncategorized-heading{background:#f3f4f6;color:#344054}
+</style>
 
 <div class="page-heading">
     <div><span class="eyebrow">Repository insight</span><h2>Circular report</h2><p>Review circulars using the same governed classification structure as the document repository.</p></div>

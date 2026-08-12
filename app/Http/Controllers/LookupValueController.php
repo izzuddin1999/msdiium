@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LookupValue;
+use App\Models\Organization;
 use App\Models\PolicyDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,10 +18,12 @@ class LookupValueController extends Controller
     public function index(Request $request): View
     {
         abort_unless($request->user()?->canManagePolicies(), 403);
+        $organization = $this->organization($request);
 
         return view('lookup_values.index', [
-            'lookupValues' => LookupValue::orderBy('type')->orderBy('sort_order')->orderBy('description')->paginate(25),
+            'lookupValues' => LookupValue::where('owner_unit', $organization)->orderBy('type')->orderBy('sort_order')->orderBy('description')->paginate(25),
             'allowedTypes' => self::ALLOWED_TYPES,
+            'organization' => $organization,
         ]);
     }
 
@@ -31,6 +34,9 @@ class LookupValueController extends Controller
         $this->normalizeSubmittedCode($request);
         $data = $request->validate($this->rules());
         $data['is_active'] = (bool) ($data['is_active'] ?? false);
+        $data['owner_unit'] = $this->organization($request);
+        $data['organization_id'] = $request->user()?->organization_id
+            ?: Organization::idForLegacyUnit($data['owner_unit']);
 
         LookupValue::create($data);
 
@@ -40,6 +46,7 @@ class LookupValueController extends Controller
     public function update(Request $request, LookupValue $lookupValue): RedirectResponse
     {
         abort_unless($request->user()?->canManagePolicies(), 403);
+        $this->ensureOrganizationAccess($request, $lookupValue);
 
         $this->normalizeSubmittedCode($request);
         $data = $request->validate($this->rules($lookupValue));
@@ -52,6 +59,7 @@ class LookupValueController extends Controller
     public function destroy(Request $request, LookupValue $lookupValue): RedirectResponse
     {
         abort_unless($request->user()?->canManagePolicies(), 403);
+        $this->ensureOrganizationAccess($request, $lookupValue);
 
         $documentColumn = match ($lookupValue->type) {
             'DOCUMENT_TYPE' => 'document_type',
@@ -77,7 +85,9 @@ class LookupValueController extends Controller
             'code' => [
                 'required', 'string', 'max:50',
                 Rule::when(request('type') === 'DOCUMENT_STATUS', Rule::in(self::DOCUMENT_STATUSES)),
-                Rule::unique('lookup_values')->where(fn ($query) => $query->where('type', request('type')))->ignore($lookupValue),
+                Rule::unique('lookup_values')->where(fn ($query) => $query
+                    ->where('owner_unit', $this->organization(request()))
+                    ->where('type', request('type')))->ignore($lookupValue),
             ],
             'description' => ['required', 'string', 'max:255'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:999'],
@@ -91,5 +101,15 @@ class LookupValueController extends Controller
 
         // Accept the common misspelling while storing the enterprise-standard term.
         $request->merge(['code' => $code === 'superceded' ? 'superseded' : $code]);
+    }
+
+    private function organization(Request $request): string
+    {
+        return $request->user()?->unit === 'kcdiom' ? 'kcdiom' : 'msd';
+    }
+
+    private function ensureOrganizationAccess(Request $request, LookupValue $lookupValue): void
+    {
+        abort_unless($lookupValue->owner_unit === $this->organization($request), 404);
     }
 }

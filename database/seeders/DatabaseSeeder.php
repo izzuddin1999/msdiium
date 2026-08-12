@@ -26,11 +26,14 @@ class DatabaseSeeder extends Seeder
             ['type' => 'DOCUMENT_TYPE', 'code' => 'circular', 'description' => 'Circular Document', 'sort_order' => 3],
             ['type' => 'DOCUMENT_STATUS', 'code' => 'draft', 'description' => 'Draft', 'sort_order' => 1],
             ['type' => 'DOCUMENT_STATUS', 'code' => 'published', 'description' => 'Active', 'sort_order' => 2],
-            ['type' => 'DOCUMENT_STATUS', 'code' => 'superseded', 'description' => 'Superceded', 'sort_order' => 3],
+            ['type' => 'DOCUMENT_STATUS', 'code' => 'superseded', 'description' => 'Superseded', 'sort_order' => 3],
             ['type' => 'DOCUMENT_STATUS', 'code' => 'inactive', 'description' => 'Inactive', 'sort_order' => 90, 'is_active' => false],
             ['type' => 'DOCUMENT_STATUS', 'code' => 'archived', 'description' => 'Archived', 'sort_order' => 91, 'is_active' => false],
         ] as $lookup) {
-            LookupValue::updateOrCreate(['type' => $lookup['type'], 'code' => $lookup['code']], $lookup + ['is_active' => true]);
+            LookupValue::updateOrCreate(
+                ['owner_unit' => 'msd', 'type' => $lookup['type'], 'code' => $lookup['code']],
+                $lookup + ['owner_unit' => 'msd', 'is_active' => true]
+            );
         }
 
         foreach ([
@@ -52,8 +55,8 @@ class DatabaseSeeder extends Seeder
                 'name' => 'MSD Administrator',
                 'staff_id' => 'MSD0001',
                 'cas_username' => 'msd.admin',
-                'role' => 'system_admin',
-                'unit' => 'all',
+                'role' => 'msd_admin',
+                'unit' => 'msd',
                 'is_active' => true,
                 'password' => 'Password123!',
             ]

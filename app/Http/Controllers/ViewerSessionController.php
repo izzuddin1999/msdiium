@@ -12,8 +12,18 @@ class ViewerSessionController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        if ($request->input('user_id') === 'public') {
+            $request->session()->forget('viewer_user_id');
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('public-portal');
+        }
+
         $data = $request->validate([
             'user_id' => ['required', Rule::exists(User::class, 'id')],
+            'redirect_to' => ['nullable', Rule::in(['dashboard', 'public'])],
         ]);
 
         $viewer = User::query()
@@ -21,17 +31,40 @@ class ViewerSessionController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        $request->session()->put('viewer_user_id', $viewer->id);
         Auth::guard('web')->login($viewer);
+        $request->session()->regenerate();
+        $request->session()->put('viewer_user_id', $viewer->id);
+
+        if (($data['redirect_to'] ?? null) === 'dashboard') {
+            return redirect()->route('public-portal')
+                ->with('status', 'Welcome back, '.$viewer->name.'.');
+        }
+
+        if (($data['redirect_to'] ?? null) === 'public') {
+            return redirect()->route('public-portal')
+                ->with('status', 'Signed in as '.$viewer->name.'.');
+        }
 
         return back()->with('status', 'Viewer switched to '.$viewer->name.'.');
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        $data = $request->validate([
+            'redirect_to' => ['nullable', Rule::in(['dashboard', 'public'])],
+        ]);
+
         $request->session()->forget('viewer_user_id');
         Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        return back()->with('status', 'Viewer reset to guest mode.');
+        if (($data['redirect_to'] ?? null) === 'public') {
+            return redirect()->route('public-portal')
+                ->with('status', 'You have signed out of the Staff Portal.');
+        }
+
+        return redirect()->route('public-portal')
+            ->with('status', 'Viewer reset to guest mode.');
     }
 }

@@ -1,15 +1,17 @@
 <?php
 
 use App\Http\Controllers\PortalAssistantController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DirectorySyncController;
 use App\Http\Controllers\DocumentActivityLogController;
 use App\Http\Controllers\FormTemplateController;
 use App\Http\Controllers\LookupValueController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrganizationProfileController;
 use App\Http\Controllers\PolicyDocumentController;
+use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\ReportingDashboardController;
 use App\Http\Controllers\RoleManagementController;
+use App\Http\Controllers\StaffPortalController;
 use App\Http\Controllers\TopicCategoryController;
 use App\Http\Controllers\UserAccessReportController;
 use App\Http\Controllers\ViewerSessionController;
@@ -17,7 +19,19 @@ use App\Http\Middleware\EnsureFormBuilderEnabled;
 use App\Models\PolicyDocument;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/', [PublicPortalController::class, 'index'])->name('public-portal');
+Route::get('/public/msd', [PublicPortalController::class, 'index'])->defaults('unit', 'msd')->name('public.msd');
+Route::get('/public/msd/topics/{topicSubtopic}', [PublicPortalController::class, 'topic'])->name('public.msd.topics.show');
+Route::get('/public/kcdiom', [PublicPortalController::class, 'index'])->defaults('unit', 'kcdiom')->name('public.kcdiom');
+Route::get('/public/documents/{policyDocument}', [PublicPortalController::class, 'show'])->name('public.documents.show');
+Route::get('/public/attachments/{documentAttachment}/download', [PublicPortalController::class, 'download'])->name('public.attachments.download');
+Route::get('/public/attachments/{documentAttachment}/preview', [PublicPortalController::class, 'preview'])->name('public.attachments.preview');
+
+// Staff Portal Routes
+Route::get('/staff-portal', [StaffPortalController::class, 'create'])->name('staff-portal.create');
+Route::post('/staff-portal/logout', [StaffPortalController::class, 'destroy'])->name('staff-portal.logout');
+
+Route::get('/dashboard', fn (\Illuminate\Http\Request $request) => redirect()->route('public-portal', $request->query()))->name('dashboard');
 Route::get('/csrf-token', fn () => response()
     ->json(['token' => csrf_token()])
     ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0'))
@@ -28,6 +42,8 @@ Route::delete('/viewer-session', [ViewerSessionController::class, 'destroy'])->n
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 Route::patch('/notifications/{notification}', [NotificationController::class, 'update'])->name('notifications.update');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+Route::get('/organization-profile', [OrganizationProfileController::class, 'show'])->name('organization-profile.show');
+Route::put('/organization-profile', [OrganizationProfileController::class, 'update'])->name('organization-profile.update');
 
 Route::get('/policy-documents', [PolicyDocumentController::class, 'index'])->name('policy-documents.index');
 Route::get('/policy-documents/create', [PolicyDocumentController::class, 'create'])->name('policy-documents.create');
@@ -63,12 +79,14 @@ Route::delete('/topic-categories/subtopics/{topicSubtopic}', [TopicCategoryContr
 Route::post('/topic-categories/details', [TopicCategoryController::class, 'storeDetail'])->name('topic-details.store');
 Route::put('/topic-categories/details/{topicDetail}', [TopicCategoryController::class, 'updateDetail'])->name('topic-details.update');
 Route::delete('/topic-categories/details/{topicDetail}', [TopicCategoryController::class, 'destroyDetail'])->name('topic-details.destroy');
+Route::post('/topic-categories/reorder', [TopicCategoryController::class, 'reorder'])->name('topic-categories.reorder');
 
 Route::get('/lookup-values', [LookupValueController::class, 'index'])->name('lookup-values.index');
 Route::post('/lookup-values', [LookupValueController::class, 'store'])->name('lookup-values.store');
 Route::put('/lookup-values/{lookupValue}', [LookupValueController::class, 'update'])->name('lookup-values.update');
 Route::delete('/lookup-values/{lookupValue}', [LookupValueController::class, 'destroy'])->name('lookup-values.destroy');
 Route::get('/document-activity-logs', [DocumentActivityLogController::class, 'index'])->name('document-activity-logs.index');
+Route::get('/document-activity-logs/export', [DocumentActivityLogController::class, 'export'])->name('document-activity-logs.export');
 Route::get('/reports/user-access', [UserAccessReportController::class, 'index'])->name('reports.user-access');
 Route::get('/reports/user-access/export', [UserAccessReportController::class, 'export'])->name('reports.user-access.export');
 Route::get('/directory-sync', [DirectorySyncController::class, 'index'])->name('directory-sync.index');

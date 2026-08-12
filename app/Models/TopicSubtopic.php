@@ -18,6 +18,7 @@ class TopicSubtopic extends Model
         'name',
         'slug',
         'is_active',
+        'sort_order',
     ];
 
     protected function casts(): array

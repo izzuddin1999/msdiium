@@ -27,12 +27,16 @@ class RoleManagementController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'staff_id' => ['required', 'string', 'max:20', 'unique:users,staff_id'],
             'cas_username' => ['required', 'string', 'max:255', 'unique:users,cas_username'],
-            'role' => ['required', 'in:system_admin,policy_manager,staff_user'],
+            'role' => ['required', 'in:system_admin,msd_admin,policy_manager,kcdiom_liaison,staff_user'],
             'unit' => ['required', 'in:all,msd,kcdiom'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        if ($data['role'] === 'staff_user' || $data['role'] === 'system_admin') {
+        if ($data['role'] === 'msd_admin') {
+            $data['unit'] = 'msd';
+        } elseif ($data['role'] === 'kcdiom_liaison') {
+            $data['unit'] = 'kcdiom';
+        } elseif ($data['role'] === 'staff_user' || $data['role'] === 'system_admin') {
             $data['unit'] = 'all';
         }
 
@@ -49,12 +53,16 @@ class RoleManagementController extends Controller
         abort_unless($request->user()?->canAdministerAccess(), 403);
 
         $data = $request->validate([
-            'role' => ['required', 'in:system_admin,policy_manager,staff_user'],
+            'role' => ['required', 'in:system_admin,msd_admin,policy_manager,kcdiom_liaison,staff_user'],
             'unit' => ['required', 'in:all,msd,kcdiom'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        if ($data['role'] === 'staff_user' || $data['role'] === 'system_admin') {
+        if ($data['role'] === 'msd_admin') {
+            $data['unit'] = 'msd';
+        } elseif ($data['role'] === 'kcdiom_liaison') {
+            $data['unit'] = 'kcdiom';
+        } elseif ($data['role'] === 'staff_user' || $data['role'] === 'system_admin') {
             $data['unit'] = 'all';
         }
 

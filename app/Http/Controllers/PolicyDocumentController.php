@@ -6,6 +6,7 @@ use App\Models\PolicyDocument;
 use App\Models\DocumentAttachment;
 use App\Models\DocumentHistory;
 use App\Models\LookupValue;
+use App\Models\Organization;
 use App\Models\TopicCategory;
 use App\Models\TopicSubtopic;
 use App\Models\TopicDetail;
@@ -17,6 +18,7 @@ use App\Notifications\DocumentPublishedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -44,7 +46,7 @@ class PolicyDocumentController extends Controller
                     ->whereColumn('newer.version_number', '>', 'policy_documents.version_number');
 
                 if (! $canManageDocuments) {
-                    $newer->where('newer.status', 'published');
+                    $newer->whereIn('newer.status', ['published', 'superseded']);
                 }
             });
         };
@@ -54,27 +56,43 @@ class PolicyDocumentController extends Controller
             $relations[] = 'formResponses.template';
         }
 
-        $query = PolicyDocument::with($relations)
-            ->visibleTo($viewer)
-            ->tap($latestInFamily)
-            ->latest();
+        $showSupersededHistory = $request->string('status')->toString() === 'superseded';
+        $query = PolicyDocument::with($relations)->visibleTo($viewer);
+        if (! $showSupersededHistory) {
+            $query->tap($latestInFamily);
+        }
         $visibleDocuments = PolicyDocument::query()->visibleTo($viewer)->tap($latestInFamily);
+        $visibleHistory = PolicyDocument::query()->visibleTo($viewer);
+        $unitVisibleDocuments = PolicyDocument::query()->visibleTo($viewer)->tap($latestInFamily);
+
+        if ($request->boolean('public')) {
+            $unitVisibleDocuments->where('public_flag', true);
+        }
+
+        $unitStats = [
+            'all' => (clone $unitVisibleDocuments)->count(),
+            'msd' => (clone $unitVisibleDocuments)->where('owner_unit', 'msd')->count(),
+            'kcdiom' => (clone $unitVisibleDocuments)->where('owner_unit', 'kcdiom')->count(),
+        ];
 
         if ($request->filled('unit') && in_array($request->string('unit')->toString(), ['msd', 'kcdiom'], true)) {
             $unit = $request->string('unit')->toString();
             $query->where('owner_unit', $unit);
             $visibleDocuments->where('owner_unit', $unit);
+            $visibleHistory->where('owner_unit', $unit);
         }
 
         if ($request->boolean('public')) {
             $query->where('public_flag', true);
             $visibleDocuments->where('public_flag', true);
+            $visibleHistory->where('public_flag', true);
         }
 
         $repositoryStats = [
             'total' => (clone $visibleDocuments)->count(),
             'published' => (clone $visibleDocuments)->where('status', 'published')->count(),
             'draft' => (clone $visibleDocuments)->where('status', 'draft')->count(),
+            'superseded' => (clone $visibleHistory)->where('status', 'superseded')->count(),
             'expiring' => (clone $visibleDocuments)->whereNotNull('expiry_date')->whereBetween('expiry_date', [today(), today()->addDays(30)])->count(),
         ];
 
@@ -106,14 +124,26 @@ class PolicyDocumentController extends Controller
             $query->whereHas('formResponses', fn ($builder) => $builder->where('form_template_id', (int) $request->input('form_template_id')));
         }
 
+        match ($request->string('sort')->toString()) {
+            'title' => $query->orderBy('title'),
+            'oldest' => $query->oldest('updated_at'),
+            'effective' => $query->orderByDesc('effective_date'),
+            default => $query->latest('updated_at'),
+        };
+
         $documents = $this->decoratePaginator($query->paginate(12)->withQueryString());
         $this->attachVersionFamilies($documents->getCollection(), $viewer);
         $showMsdDashboard = $request->string('unit')->toString() === 'msd' && ! $canManageDocuments;
         $msdTopicDashboard = $showMsdDashboard
             ? TopicCategory::query()
+                // SQLite cannot compile a schema-qualified `table.*` select.
+                // Listing the columns explicitly keeps the shared HR schema
+                // compatible while retaining relationship and count loading.
+                ->select(['id', 'name', 'slug', 'owner_unit', 'organization_id', 'is_active', 'sort_order'])
                 ->where('is_active', true)
                 ->with([
                     'subtopics' => fn ($topicQuery) => $topicQuery
+                        ->select(['id', 'topic_category_id', 'name', 'slug', 'is_active', 'sort_order'])
                         ->where('is_active', true)
                         ->withCount(['details' => fn ($detailQuery) => $detailQuery->where('is_active', true)])
                         ->orderBy('name'),
@@ -138,6 +168,10 @@ class PolicyDocumentController extends Controller
             'documentTypes' => $this->lookupOptions('DOCUMENT_TYPE', ['policy' => 'Policy', 'guideline' => 'Guideline', 'circular' => 'Circular']),
             'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
             'repositoryStats' => $repositoryStats,
+            'unitStats' => $unitStats,
+            'selectedUnit' => in_array($request->string('unit')->toString(), ['msd', 'kcdiom'], true)
+                ? $request->string('unit')->toString()
+                : null,
             'showMsdDashboard' => $showMsdDashboard,
             'msdTopicDashboard' => $msdTopicDashboard,
             'formTemplates' => config('features.form_builder') ? FormTemplate::where('is_active', true)->orderBy('name')->get(['id', 'name']) : collect(),
@@ -152,6 +186,7 @@ class PolicyDocumentController extends Controller
         $lookupTerm = trim((string) $request->input('title_lookup', old('title', '')));
 
         return view('policy_documents.create', [
+            'managementUnit' => $this->organizationUnit($viewer),
             'users' => $this->editableCreators(),
             'document' => new PolicyDocument(),
             'lookupTerm' => $lookupTerm,
@@ -171,9 +206,12 @@ class PolicyDocumentController extends Controller
         $viewer = $request->user();
         $this->ensureCanManageDocuments($viewer);
 
-        $submittedTitle = trim((string) $request->input('title'));
-        $exists = $submittedTitle !== '' && PolicyDocument::where('title', $submittedTitle)
+        $submittedTitle = preg_replace('/\s+/u', ' ', trim((string) $request->input('title')));
+        $ownerUnit = $viewer?->isKcdiomLiaison() ? 'kcdiom' : 'msd';
+        $exists = $submittedTitle !== '' && PolicyDocument::query()
             ->whereNull('parent_document_id')
+            ->where('owner_unit', $ownerUnit)
+            ->whereRaw('LOWER(TRIM(title)) = ?', [mb_strtolower($submittedTitle)])
             ->exists();
 
         if ($exists) {
@@ -189,30 +227,32 @@ class PolicyDocumentController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'reference_number' => ['nullable', 'string', 'max:100', Rule::unique(PolicyDocument::class, 'reference_number')],
             'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
-            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
-            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
-            'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true)->where('owner_unit', $ownerUnit))],
+            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('topic_category_id', TopicCategory::where('owner_unit', $ownerUnit)->select('id')))],
+            'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('main_topic_id', TopicSubtopic::whereIn('topic_category_id', TopicCategory::where('owner_unit', $ownerUnit)->select('id'))->select('id')))],
             'content' => ['required', 'string'],
             'revision_summary' => ['nullable', 'string', 'max:1000'],
             'effective_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
             'remarks' => ['nullable', 'string', 'max:2000'],
-            'access_scope' => ['required', 'in:all,kcdiom,msd'],
+            'access_scope' => ['required', Rule::in(['all', $ownerUnit])],
             'public_flag' => ['nullable', 'boolean'],
             'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
-            'is_circular' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => ['file', 'mimes:pdf', 'max:3072'],
             'form_template_id' => [Rule::prohibitedIf(! config('features.form_builder')), 'nullable', 'integer', 'exists:form_templates,id'],
         ]);
+        $data['title'] = $submittedTitle;
 
         [$template, $dynamicValues] = $this->validateDynamicForm($request, $viewer, $data['form_template_id'] ?? null);
         unset($data['form_template_id']);
 
         // Governance ownership is derived from the authenticated manager rather
         // than being manually selected during document registration.
-        $data['owner_unit'] = $viewer?->isKcdiomLiaison() ? 'kcdiom' : 'msd';
+        $data['owner_unit'] = $ownerUnit;
+        $data['organization_id'] = $viewer?->organization_id
+            ?: Organization::idForLegacyUnit($data['owner_unit']);
         $data['owner_report'] = null;
         $data['created_by'] = $viewer?->id;
 
@@ -226,8 +266,8 @@ class PolicyDocumentController extends Controller
             $data['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
         }
 
-        $data['is_circular'] = (bool) ($data['is_circular'] ?? false);
-        $data['public_flag'] = (bool) ($data['public_flag'] ?? $data['access_scope'] === 'all');
+        $data['is_circular'] = $data['document_type'] === 'circular';
+        $data['public_flag'] = $request->boolean('public_flag');
         $data['version_number'] = 1;
         $data['published_at'] = $data['status'] === 'published' ? now() : null;
         $data['published_by'] = $data['status'] === 'published' ? $viewer?->id : null;
@@ -272,7 +312,7 @@ class PolicyDocumentController extends Controller
         $currentAttachments = DocumentAttachment::with(['uploader', 'history'])
             ->where('policy_document_id', $rootId)
             ->when($currentHistory, fn ($query) => $query->where('document_history_id', $currentHistory->id))
-            ->when(! ($viewer?->is_active ?? false), fn ($query) => $query->where('is_public', true))
+            ->when(! ($viewer?->canManagePolicies() ?? false), fn ($query) => $query->where('is_public', true))
             ->orderBy('id')
             ->get();
         $primaryAttachment = $policyDocument->file_path
@@ -284,10 +324,12 @@ class PolicyDocumentController extends Controller
             : null;
         $versions = $this->decorateCollection($versions);
         $policyDocument = $this->decorateDocument($policyDocument);
+        $activeVersion = $versions->firstWhere('status', 'published');
 
         return view('policy_documents.show', [
             'document' => $policyDocument,
             'versions' => $versions,
+            'activeVersion' => $activeVersion,
             'users' => $this->editableCreators(),
             'canManageDocuments' => $this->canManageDocuments($viewer),
             'canPublishDocument' => $this->canPublishDocument($viewer, $policyDocument),
@@ -296,17 +338,17 @@ class PolicyDocumentController extends Controller
             'normalizedHistories' => DocumentHistory::with([
                 'creator',
                 'attachments' => fn ($query) => $query->when(
-                    ! ($viewer?->is_active ?? false),
+                    ! ($viewer?->canManagePolicies() ?? false),
                     fn ($attachmentQuery) => $attachmentQuery->where('is_public', true)
                 ),
             ])->where('policy_document_id', $rootId)->orderByDesc('version_number')->get(),
             'normalizedAttachments' => DocumentAttachment::with(['uploader', 'history'])
                 ->where('policy_document_id', $rootId)
-                ->when(! ($viewer?->is_active ?? false), fn ($query) => $query->where('is_public', true))
+                ->when(! ($viewer?->canManagePolicies() ?? false), fn ($query) => $query->where('is_public', true))
                 ->latest()
                 ->get(),
             'currentAttachments' => $currentAttachments,
-            'legacyPdfAllowed' => ! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->is_active ?? false),
+            'legacyPdfAllowed' => ! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->canManagePolicies() ?? false),
             'documentStatuses' => $this->lookupOptions('DOCUMENT_STATUS', ['draft' => 'Draft', 'published' => 'Active', 'superseded' => 'Superceded']),
         ]);
     }
@@ -322,7 +364,7 @@ class PolicyDocumentController extends Controller
             ->where('file_path', $policyDocument->file_path)
             ->latest('id')
             ->first();
-        abort_unless(! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->is_active ?? false), 404);
+        abort_unless(! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->canManagePolicies() ?? false), 404);
         abort_unless(Storage::disk('public')->exists($policyDocument->file_path), 404);
 
         return Storage::disk('public')->download(
@@ -342,7 +384,7 @@ class PolicyDocumentController extends Controller
             ->where('file_path', $policyDocument->file_path)
             ->latest('id')
             ->first();
-        abort_unless(! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->is_active ?? false), 404);
+        abort_unless(! $primaryAttachment || $primaryAttachment->is_public || ($viewer?->canManagePolicies() ?? false), 404);
         abort_unless(Storage::disk('public')->exists($policyDocument->file_path), 404);
 
         $fileName = $policyDocument->file_original_name ?: basename($policyDocument->file_path);
@@ -363,9 +405,9 @@ class PolicyDocumentController extends Controller
         $documentAttachment->loadMissing('history');
 
         abort_unless($this->canViewDocument($viewer, $document), 404);
-        abort_unless($documentAttachment->is_public || ($viewer?->is_active ?? false), 404);
+        abort_unless($documentAttachment->is_public || ($viewer?->canManagePolicies() ?? false), 404);
         if (! ($viewer?->canManagePolicies() ?? false) && $documentAttachment->history) {
-            abort_unless($documentAttachment->history->status === 'published', 404);
+            abort_unless(in_array($documentAttachment->history->status, ['published', 'superseded'], true), 404);
         }
         abort_unless(Storage::disk('public')->exists($documentAttachment->file_path), 404);
 
@@ -388,9 +430,9 @@ class PolicyDocumentController extends Controller
         $documentAttachment->loadMissing('history');
 
         abort_unless($this->canViewDocument($viewer, $document), 404);
-        abort_unless($documentAttachment->is_public || ($viewer?->is_active ?? false), 404);
+        abort_unless($documentAttachment->is_public || ($viewer?->canManagePolicies() ?? false), 404);
         if (! ($viewer?->canManagePolicies() ?? false) && $documentAttachment->history) {
-            abort_unless($documentAttachment->history->status === 'published', 404);
+            abort_unless(in_array($documentAttachment->history->status, ['published', 'superseded'], true), 404);
         }
         abort_unless(strtolower(pathinfo($documentAttachment->file_name, PATHINFO_EXTENSION)) === 'pdf', 415, 'Only PDF documents can be previewed.');
         abort_unless(Storage::disk('public')->exists($documentAttachment->file_path), 404);
@@ -491,6 +533,7 @@ class PolicyDocumentController extends Controller
             ->value('id');
 
         return view('policy_documents.edit', [
+            'managementUnit' => $this->organizationUnit($viewer),
             'document' => $policyDocument,
             'currentAttachments' => DocumentAttachment::query()
                 ->where('policy_document_id', $rootId)
@@ -511,23 +554,23 @@ class PolicyDocumentController extends Controller
         $viewer = $request->user();
         $this->ensureCanManageDocuments($viewer);
         abort_unless($this->canViewDocument($viewer, $policyDocument), 404);
+        $ownerUnit = $this->organizationUnit($viewer);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'reference_number' => ['nullable', 'string', 'max:100', Rule::unique(PolicyDocument::class, 'reference_number')->ignore($policyDocument)],
             'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
-            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true))],
-            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true))],
-            'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true))],
+            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true)->where('owner_unit', $ownerUnit))],
+            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('topic_category_id', TopicCategory::where('owner_unit', $ownerUnit)->select('id')))],
+            'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('main_topic_id', TopicSubtopic::whereIn('topic_category_id', TopicCategory::where('owner_unit', $ownerUnit)->select('id'))->select('id')))],
             'content' => ['required', 'string'],
             'revision_summary' => ['nullable', 'string', 'max:1000'],
             'effective_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
             'remarks' => ['nullable', 'string', 'max:2000'],
-            'access_scope' => ['required', 'in:all,kcdiom,msd'],
+            'access_scope' => ['required', Rule::in(['all', $ownerUnit])],
             'public_flag' => ['nullable', 'boolean'],
             'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
-            'is_circular' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => ['file', 'mimes:pdf', 'max:3072'],
@@ -547,8 +590,8 @@ class PolicyDocumentController extends Controller
             $data['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
         }
 
-        $data['is_circular'] = (bool) ($data['is_circular'] ?? false);
-        $data['public_flag'] = (bool) ($data['public_flag'] ?? $data['access_scope'] === 'all');
+        $data['is_circular'] = $data['document_type'] === 'circular';
+        $data['public_flag'] = $request->boolean('public_flag');
         $data['updated_by'] = $viewer?->id;
         $data['published_at'] = $data['status'] === 'published' ? ($policyDocument->published_at ?? now()) : null;
         $data['published_by'] = $data['status'] === 'published' ? ($policyDocument->published_by ?? $viewer?->id) : null;
@@ -605,7 +648,7 @@ class PolicyDocumentController extends Controller
             'effective_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
             'remarks' => ['nullable', 'string', 'max:2000'],
-            'is_circular' => ['nullable', 'boolean'],
+            'public_flag' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => ['file', 'mimes:pdf', 'max:3072'],
@@ -613,6 +656,23 @@ class PolicyDocumentController extends Controller
             'retain_attachment_ids' => ['nullable', 'array'],
             'retain_attachment_ids.*' => ['integer'],
         ]);
+
+        // A new version inherits the document family's title; the version form
+        // intentionally does not ask users to submit the same title again.
+        $normalizedTitle = preg_replace('/\s+/u', ' ', trim($policyDocument->title));
+        $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
+        $duplicateFamily = PolicyDocument::query()
+            ->whereNull('parent_document_id')
+            ->where('owner_unit', $policyDocument->owner_unit)
+            ->whereKeyNot($rootId)
+            ->whereRaw('LOWER(TRIM(title)) = ?', [mb_strtolower($normalizedTitle)])
+            ->exists();
+
+        if ($duplicateFamily) {
+            return back()->withInput()->withErrors([
+                'title' => 'Another document family in this unit already uses this title. Open that record to create a new version.',
+            ]);
+        }
 
         $rootId = $policyDocument->parent_document_id ?: $policyDocument->id;
         $selectedMainTopic = $policyDocument->topic_category;
@@ -650,11 +710,13 @@ class PolicyDocumentController extends Controller
             'expiry_date' => $data['expiry_date'] ?? null,
             'remarks' => $data['remarks'] ?? null,
             'access_scope' => $policyDocument->access_scope,
-            'public_flag' => $policyDocument->public_flag,
+            'public_flag' => $request->boolean('public_flag'),
             'owner_unit' => $policyDocument->owner_unit,
+            'organization_id' => $policyDocument->organization_id
+                ?: Organization::idForLegacyUnit($policyDocument->owner_unit),
             'owner_report' => $policyDocument->owner_report,
             'status' => 'draft',
-            'is_circular' => (bool) ($data['is_circular'] ?? $policyDocument->is_circular),
+            'is_circular' => $policyDocument->document_type === 'circular',
             'version_number' => ($latestVersion ?? 1) + 1,
             'parent_document_id' => $rootId,
             'created_by' => $policyDocument->created_by,
@@ -725,9 +787,20 @@ class PolicyDocumentController extends Controller
 
     private function editableCreators()
     {
+        $unit = $this->organizationUnit(request()->user());
+
+        $unitScope = function ($query) use ($unit): void {
+            $query->where('unit', $unit);
+
+            if (Schema::hasTable('organizations')) {
+                $query->orWhereHas('organization', fn ($organization) => $organization->where('code', strtoupper($unit)));
+            }
+        };
+
         return User::query()
             ->where('is_active', true)
             ->whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'])
+            ->where($unitScope)
             ->orderBy('name')
             ->get();
     }
@@ -755,6 +828,7 @@ class PolicyDocumentController extends Controller
     private function topicCategoryOptions()
     {
         return TopicCategory::query()
+            ->where('owner_unit', $this->organizationUnit(request()->user()))
             ->where('is_active', true)
             ->orderBy('name')
             ->pluck('name', 'slug');
@@ -766,7 +840,7 @@ class PolicyDocumentController extends Controller
             ->select(['id', 'topic_category_id', 'name'])
             ->with('mainTopic:id,slug,name')
             ->where('is_active', true)
-            ->whereHas('mainTopic', fn ($query) => $query->where('is_active', true))
+            ->whereHas('mainTopic', fn ($query) => $query->where('is_active', true)->where('owner_unit', $this->organizationUnit(request()->user())))
             ->orderBy('name')
             ->get();
     }
@@ -776,6 +850,7 @@ class PolicyDocumentController extends Controller
         return TopicDetail::query()
             ->select(['id', 'main_topic_id', 'name'])
             ->where('is_active', true)
+            ->whereHas('mainTopic.mainTopic', fn ($query) => $query->where('owner_unit', $this->organizationUnit(request()->user())))
             ->orderBy('name')
             ->get();
     }
@@ -784,6 +859,7 @@ class PolicyDocumentController extends Controller
     {
         $options = LookupValue::query()
             ->where('type', $type)
+            ->where('owner_unit', $this->organizationUnit(request()->user()))
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->pluck('description', 'code');
@@ -793,7 +869,7 @@ class PolicyDocumentController extends Controller
 
     private function lookupCodes(string $type, array $fallback): array
     {
-        $codes = LookupValue::query()->where('type', $type)->where('is_active', true)->pluck('code')->all();
+        $codes = LookupValue::query()->where('type', $type)->where('owner_unit', $this->organizationUnit(request()->user()))->where('is_active', true)->pluck('code')->all();
 
         return $codes === [] ? $fallback : $codes;
     }
@@ -805,7 +881,7 @@ class PolicyDocumentController extends Controller
         }
 
         return FormTemplate::with('fields')->where('is_active', true)
-            ->when($viewer?->isKcdiomLiaison(), fn ($query) => $query->where('owner_unit', 'kcdiom'))
+            ->where('owner_unit', $this->organizationUnit($viewer))
             ->orderBy('name')->get()->map(function (FormTemplate $template) {
                 $template->fields->each(function ($field): void {
                     $field->setAttribute('resolved_options', $this->dynamicFieldOptions($field->data_source, $field->options ?? []));
@@ -816,13 +892,15 @@ class PolicyDocumentController extends Controller
 
     private function dynamicFieldOptions(?string $source, array $manual): array
     {
+        $unit = $this->organizationUnit(request()->user());
+
         return match ($source) {
-            'users' => User::where('is_active', true)->orderBy('name')->get()->map(fn ($u) => ['value' => (string) $u->id, 'label' => $u->name])->all(),
-            'main_topics' => TopicCategory::where('is_active', true)->orderBy('name')->get()->map(fn ($v) => ['value' => $v->slug, 'label' => $v->name])->all(),
-            'subtopics' => TopicSubtopic::where('is_active', true)->orderBy('name')->get()->map(fn ($v) => ['value' => (string) $v->id, 'label' => $v->name])->all(),
-            'departments' => $this->masterOptions('DEPARTMENT', User::where('is_active', true)->whereNotNull('unit')->distinct()->orderBy('unit')->pluck('unit')->all()),
+            'users' => User::where('is_active', true)->where('unit', $unit)->orderBy('name')->get()->map(fn ($u) => ['value' => (string) $u->id, 'label' => $u->name])->all(),
+            'main_topics' => TopicCategory::where('is_active', true)->where('owner_unit', $unit)->orderBy('name')->get()->map(fn ($v) => ['value' => $v->slug, 'label' => $v->name])->all(),
+            'subtopics' => TopicSubtopic::where('is_active', true)->whereHas('mainTopic', fn ($query) => $query->where('owner_unit', $unit))->orderBy('name')->get()->map(fn ($v) => ['value' => (string) $v->id, 'label' => $v->name])->all(),
+            'departments' => $this->masterOptions('DEPARTMENT', [$unit]),
             'user_roles' => $this->masterOptions('USER_ROLE', User::where('is_active', true)->whereNotNull('role')->distinct()->orderBy('role')->pluck('role')->all()),
-            'access_scopes' => [['value' => 'all', 'label' => 'ALL'], ['value' => 'kcdiom', 'label' => 'KCDIOM'], ['value' => 'msd', 'label' => 'MSD']],
+            'access_scopes' => [['value' => 'all', 'label' => 'ALL'], ['value' => $unit, 'label' => strtoupper($unit)]],
             'document_types' => $this->lookupOptions('DOCUMENT_TYPE', [])->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
             'document_statuses' => $this->lookupOptions('DOCUMENT_STATUS', [])->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
             default => str_starts_with((string) $source, 'lov:')
@@ -841,7 +919,7 @@ class PolicyDocumentController extends Controller
     {
         if (! $templateId) return [null, []];
         $template = FormTemplate::with('fields')->whereKey($templateId)->where('is_active', true)
-            ->when($viewer?->isKcdiomLiaison(), fn ($query) => $query->where('owner_unit', 'kcdiom'))->firstOrFail();
+            ->where('owner_unit', $this->organizationUnit($viewer))->firstOrFail();
         $rules = [];
         foreach ($template->fields as $field) {
             if ($field->binding || in_array($field->type, ['heading', 'paragraph'], true)) continue;
@@ -878,7 +956,9 @@ class PolicyDocumentController extends Controller
 
         $isMatching = TopicSubtopic::query()
             ->whereKey($subtopicId)
-            ->whereHas('mainTopic', fn ($query) => $query->where('slug', $mainTopicSlug))
+            ->whereHas('mainTopic', fn ($query) => $query
+                ->where('slug', $mainTopicSlug)
+                ->where('owner_unit', $this->organizationUnit(request()->user())))
             ->exists();
 
         if (! $isMatching) {
@@ -894,7 +974,11 @@ class PolicyDocumentController extends Controller
             return;
         }
 
-        if (! $mainTopicId || ! TopicDetail::query()->whereKey($topicDetailId)->where('main_topic_id', $mainTopicId)->exists()) {
+        if (! $mainTopicId || ! TopicDetail::query()
+            ->whereKey($topicDetailId)
+            ->where('main_topic_id', $mainTopicId)
+            ->whereHas('mainTopic.mainTopic', fn ($query) => $query->where('owner_unit', $this->organizationUnit(request()->user())))
+            ->exists()) {
             throw ValidationException::withMessages([
                 'topic_detail_id' => 'Selected subtopic does not belong to the selected main topic.',
             ]);
@@ -916,7 +1000,12 @@ class PolicyDocumentController extends Controller
 
     private function ensureOwnerUnitAccess(?User $user, string $ownerUnit): void
     {
-        // All policy_manager users (MSD/KCDIOM) manage documents across all units.
+        abort_unless($user?->canManagePolicies() && $ownerUnit === $this->organizationUnit($user), 403);
+    }
+
+    private function organizationUnit(?User $user): string
+    {
+        return $user?->unit === 'kcdiom' ? 'kcdiom' : 'msd';
     }
 
     private function canPublishDocument(?User $user, PolicyDocument $policyDocument): bool

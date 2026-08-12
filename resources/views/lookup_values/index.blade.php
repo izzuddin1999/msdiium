@@ -1,57 +1,63 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="breadcrumb-flow"><a href="{{ route('dashboard') }}">Dashboard</a><span class="material-icons">chevron_right</span><span>Lookup values</span></div>
-<div class="page-heading"><div><span class="eyebrow">LOV_MAIN governance</span><h2>Lookup values</h2><p>Control the document types and lifecycle statuses presented throughout the system.</p></div></div>
+<style>
+    .lookup-v2{padding-bottom:28px}.lookup-v2-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:15px}.lookup-v2-head h2{margin:4px 0;color:#15263f;font-size:27px}.lookup-v2-head p{margin:0;color:#667085;font-size:12px}.lookup-data-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:#e7f5f1;color:#116a62;font-size:10px;font-weight:800}.lookup-data-pill .material-icons{font-size:16px}.lookup-notice{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;margin-bottom:20px;padding:16px 18px;border:1px solid #9edccd;border-left:3px solid #44c49c;border-radius:8px;background:rgba(230,249,242,.88);color:#135f53}.lookup-notice>.material-icons{font-size:26px}.lookup-notice strong,.lookup-notice small{display:block}.lookup-notice strong{font-size:10px}.lookup-notice small{margin-top:4px;font-size:9px}.lookup-notice button{border:0;background:transparent;color:#135f53}.lookup-v2-grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:start}.lookup-card{overflow:hidden;border:1px solid #dfe5e8;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 4px 14px rgba(30,54,68,.05)}.lookup-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px}.lookup-card-head h3{margin:0;color:#172b4d;font-size:14px}.lookup-card-head p{margin:5px 0 0;color:#667085;font-size:9px}.lookup-add-form{padding:0 20px 20px}.lookup-add-form label{display:block;margin:0 0 14px;color:#24344c;font-size:10px;font-weight:750}.lookup-add-form input,.lookup-add-form select{width:100%;height:42px;margin-top:7px;padding:0 11px;border:1px solid #d5dee2;border-radius:7px;background:#fff;color:#415168;font-size:10px}.lookup-form-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lookup-check{display:flex!important;align-items:center;gap:8px}.lookup-check input{width:17px!important;height:17px!important;margin:0!important;accent-color:#087c75}.lookup-add-button{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:42px;border:0;border-radius:7px;background:linear-gradient(135deg,#00746d,#099b91);color:#fff;font-size:10px;font-weight:800}.lookup-add-button .material-icons{font-size:18px}.lookup-tip{margin:0 20px 20px;padding:14px;border:1px solid #cfe2f8;border-radius:7px;background:#edf6ff;color:#244f7c}.lookup-tip strong{display:flex;align-items:center;gap:7px;font-size:9px}.lookup-tip p{margin:7px 0 0 25px;font-size:8px;line-height:1.55}.lookup-tools{display:flex;align-items:center;gap:10px}.lookup-tools label{position:relative;margin:0}.lookup-tools select,.lookup-tools input{height:38px;border:1px solid #d5dee2;border-radius:7px;background:#fff;color:#415168;font-size:9px}.lookup-tools select{min-width:160px;padding:0 32px 0 12px}.lookup-tools input{width:235px;padding:0 34px 0 12px}.lookup-tools .material-icons{position:absolute;right:10px;top:10px;color:#243b58;font-size:17px}.lookup-table-wrap{overflow-x:auto}.lookup-table{width:100%;border-collapse:collapse}.lookup-table th{padding:11px 12px;background:#f7f9fb;color:#30415d;font-size:8px;text-align:left;white-space:nowrap}.lookup-table td{padding:9px 12px;border-bottom:1px solid #e7ebed;color:#243650;font-size:9px;vertical-align:middle}.lookup-type-pill{display:inline-flex;padding:6px 9px;border-radius:6px;background:#e2f5ee;color:#08745c;font-size:7px;font-weight:850;white-space:nowrap}.lookup-type-pill.type-document{background:#e6f1ff;color:#1468bf}.lookup-row-display{white-space:nowrap}.lookup-status{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.lookup-status:before{content:'';width:7px;height:7px;border-radius:50%;background:#2db66d}.lookup-status.inactive:before{background:#98a2b3}.lookup-actions{display:flex;gap:7px}.lookup-action{display:grid;place-items:center;width:32px;height:32px;border:1px solid #d6e0e4;border-radius:7px;background:#fff;color:#172b4d}.lookup-action.delete{color:#ef3442}.lookup-action .material-icons{font-size:16px}.lookup-edit-field{display:none;width:100%;min-width:90px;height:32px;padding:0 7px;border:1px solid #55aea4;border-radius:5px;font-size:8px}.lookup-row.editing .lookup-row-display{display:none}.lookup-row.editing .lookup-edit-field{display:block}.lookup-save{display:none;background:#078f84;color:#fff}.lookup-row.editing .lookup-save{display:grid}.lookup-row.editing .lookup-edit{display:none}.lookup-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;color:#667085;font-size:9px}.lookup-empty{padding:38px!important;text-align:center;color:#667085!important}.lookup-empty .material-icons{display:block;margin-bottom:7px;font-size:32px}.lookup-errors{margin-bottom:14px;padding:11px 14px;border:1px solid #f3b7bd;border-radius:7px;background:#fff0f1;color:#a72834;font-size:9px}
+    @media(max-width:1100px){.lookup-v2-grid{grid-template-columns:1fr}.lookup-tools input{width:190px}}@media(max-width:650px){.lookup-v2-head{align-items:flex-start;flex-direction:column}.lookup-card-head{align-items:flex-start;flex-direction:column}.lookup-tools{width:100%;align-items:stretch;flex-direction:column}.lookup-tools label,.lookup-tools select,.lookup-tools input{width:100%}.lookup-form-pair{grid-template-columns:1fr}.lookup-notice{grid-template-columns:30px 1fr}}
+</style>
 
-<div class="row g-4">
-    <div class="col-xl-4">
-        <div class="card flow-card">
-            <div class="card-header"><h5>Add lookup value</h5><small>Codes are normalized to lowercase snake case.</small></div>
-            <form action="{{ route('lookup-values.store') }}" method="POST">
-                @csrf
-                <div class="card-body row g-3">
-                    <div class="col-12"><label class="form-label">Lookup Type</label><select name="type" class="form-control" required>@foreach($allowedTypes as $type)<option value="{{ $type }}" @selected(old('type') === $type)>{{ str_replace('_', ' ', $type) }}</option>@endforeach</select></div>
-                    <div class="col-md-6"><label class="form-label">Code</label><input name="code" class="form-control" value="{{ old('code') }}" required maxlength="50"></div>
-                    <div class="col-md-6"><label class="form-label">Sort Order</label><input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', 10) }}" required min="0" max="999"></div>
-                    <div class="col-12"><label class="form-label">Description</label><input name="description" class="form-control" value="{{ old('description') }}" required maxlength="255"></div>
-                    <div class="col-12"><div class="form-check"><input type="checkbox" name="is_active" value="1" id="lookupActive" class="form-check-input" @checked(old('is_active', true))><label for="lookupActive" class="form-check-label">Available for selection</label></div></div>
-                </div>
-                <div class="card-footer"><button class="btn btn-primary w-100">Add lookup value</button></div>
+<div class="lookup-v2">
+    <div class="breadcrumb-flow"><a href="{{ route('dashboard') }}">Home</a><span class="material-icons">chevron_right</span><span>Lookup Values</span></div>
+    <div class="lookup-v2-head"><div><h2>Lookup Values</h2><p>Manage the controlled vocabulary and lifecycle statuses used in {{ strtoupper($organization) }} workflows.</p></div><span class="lookup-data-pill"><span class="material-icons">database</span>{{ strtoupper($organization) }} data</span></div>
+
+    @if($errors->any())<div class="lookup-errors">{{ $errors->first() }}</div>@endif
+    @if(session('status'))<div class="lookup-notice" id="lookupNotice"><span class="material-icons">check_circle_outline</span><span><strong>{{ session('status') }}</strong><small>You are managing {{ strtoupper($organization) }} lookup data.</small></span><button type="button" onclick="this.parentElement.remove()"><span class="material-icons">close</span></button></div>
+    @else<div class="lookup-notice" id="lookupNotice"><span class="material-icons">check_circle_outline</span><span><strong>You are viewing data as {{ request()->user()->name }}.</strong><small>Changes you make will affect {{ strtoupper($organization) }} workflows.</small></span><button type="button" onclick="this.parentElement.remove()"><span class="material-icons">close</span></button></div>@endif
+
+    <div class="lookup-v2-grid">
+        <section class="lookup-card">
+            <div class="lookup-card-head"><div><h3>Add Lookup Value</h3><p>Create a new lookup value.</p></div></div>
+            <form class="lookup-add-form" action="{{ route('lookup-values.store') }}" method="POST">@csrf
+                <label>Lookup Type<select name="type" required><option value="">Select lookup type</option>@foreach($allowedTypes as $type)<option value="{{ $type }}" @selected(old('type')===$type)>{{ str_replace('_',' ',$type) }}</option>@endforeach</select></label>
+                <div class="lookup-form-pair"><label>Code<input name="code" value="{{ old('code') }}" placeholder="Enter code" required maxlength="50"></label><label>Sort Order<input type="number" name="sort_order" value="{{ old('sort_order',10) }}" placeholder="Enter order" required min="0" max="999"></label></div>
+                <label>Description<input name="description" value="{{ old('description') }}" placeholder="Enter description" required maxlength="255"></label>
+                <label class="lookup-check"><input type="checkbox" name="is_active" value="1" @checked(old('is_active',true))>Available for selection</label>
+                <button class="lookup-add-button"><span class="material-icons">add</span>Add Lookup Value</button>
             </form>
-        </div>
-    </div>
-    <div class="col-xl-8">
-        <div class="card flow-card">
-            <div class="card-header"><h5>Configured values</h5><small>Inactive values remain on historical records but disappear from new selections.</small></div>
-            <div class="card-body p-0"><div class="table-responsive"><table class="table flow-table mb-0">
-                <thead><tr><th>Type</th><th>Code</th><th>Description</th><th>Order</th><th>Status</th><th>Update</th><th>Delete</th></tr></thead>
-                <tbody>
-                @forelse($lookupValues as $lookup)
-                    <tr>
-                        <form action="{{ route('lookup-values.update', $lookup) }}" method="POST">@csrf @method('PUT')
-                            <td><select name="type" class="form-control form-control-sm">@foreach($allowedTypes as $type)<option value="{{ $type }}" @selected($lookup->type === $type)>{{ str_replace('_', ' ', $type) }}</option>@endforeach</select></td>
-                            <td><input name="code" class="form-control form-control-sm" value="{{ $lookup->code }}" required></td>
-                            <td><input name="description" class="form-control form-control-sm" value="{{ $lookup->description }}" required></td>
-                            <td><input type="number" name="sort_order" class="form-control form-control-sm" value="{{ $lookup->sort_order }}" min="0" max="999" required></td>
-                            <td><div class="form-check"><input type="checkbox" name="is_active" value="1" class="form-check-input" id="lookup-{{ $lookup->id }}" @checked($lookup->is_active)><label class="form-check-label" for="lookup-{{ $lookup->id }}">Active</label></div></td>
-                            <td><button class="btn btn-sm btn-warning">Save</button></td>
-                        </form>
-                        <td>
-                            <form action="{{ route('lookup-values.destroy', $lookup) }}" method="POST" onsubmit="return confirm('Delete this lookup value? This action cannot be undone.');">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" type="submit" title="Delete {{ $lookup->description }}">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="7" class="text-center py-4">No lookup values configured.</td></tr>
-                @endforelse
-                </tbody>
-            </table></div></div>
-            <div class="card-footer">{{ $lookupValues->links() }}</div>
-        </div>
+            <aside class="lookup-tip"><strong><span class="material-icons">info_outline</span>Tips</strong><p>Codes are normalized to lowercase snake case (for example, document_type).</p></aside>
+        </section>
+
+        <section class="lookup-card">
+            <div class="lookup-card-head"><div><h3>Configured Values</h3><p>Manage existing lookup values.</p></div><div class="lookup-tools"><label><select id="lookupTypeFilter"><option value="">All Lookup Types</option>@foreach($allowedTypes as $type)<option value="{{ $type }}">{{ str_replace('_',' ',$type) }}</option>@endforeach</select></label><label><input id="lookupSearch" placeholder="Search by code or description..."><span class="material-icons">search</span></label></div></div>
+            <div class="lookup-table-wrap"><table class="lookup-table"><thead><tr><th>TYPE</th><th>CODE</th><th>DESCRIPTION</th><th>ORDER</th><th>STATUS</th><th>UPDATED</th><th>ACTIONS</th></tr></thead><tbody id="lookupRows">
+            @forelse($lookupValues as $lookup)
+                <tr class="lookup-row" data-type="{{ $lookup->type }}" data-search="{{ strtolower($lookup->code.' '.$lookup->description) }}">
+                    <form id="lookup-update-{{ $lookup->id }}" action="{{ route('lookup-values.update',$lookup) }}" method="POST">@csrf @method('PUT')</form>
+                    <td><span class="lookup-row-display lookup-type-pill {{ $lookup->type==='DOCUMENT_TYPE'?'type-document':'' }}">{{ str_replace('_',' ',$lookup->type) }}</span><select class="lookup-edit-field" name="type" form="lookup-update-{{ $lookup->id }}">@foreach($allowedTypes as $type)<option value="{{ $type }}" @selected($lookup->type===$type)>{{ str_replace('_',' ',$type) }}</option>@endforeach</select></td>
+                    <td><span class="lookup-row-display">{{ $lookup->code }}</span><input class="lookup-edit-field" name="code" value="{{ $lookup->code }}" form="lookup-update-{{ $lookup->id }}" required></td>
+                    <td><span class="lookup-row-display">{{ $lookup->description }}</span><input class="lookup-edit-field" name="description" value="{{ $lookup->description }}" form="lookup-update-{{ $lookup->id }}" required></td>
+                    <td><span class="lookup-row-display">{{ $lookup->sort_order }}</span><input class="lookup-edit-field" type="number" name="sort_order" value="{{ $lookup->sort_order }}" form="lookup-update-{{ $lookup->id }}" min="0" max="999" required></td>
+                    <td><span class="lookup-row-display lookup-status {{ $lookup->is_active?'':'inactive' }}">{{ $lookup->is_active?'Active':'Inactive' }}</span><label class="lookup-edit-field"><input type="checkbox" name="is_active" value="1" form="lookup-update-{{ $lookup->id }}" @checked($lookup->is_active)> Active</label></td>
+                    <td><span>{{ $lookup->updated_at?->format('d M Y') }}</span><small style="display:block;color:#667085">by {{ request()->user()->name }}</small></td>
+                    <td><div class="lookup-actions"><button class="lookup-action lookup-edit" type="button" title="Edit"><span class="material-icons">edit</span></button><button class="lookup-action lookup-save" type="submit" form="lookup-update-{{ $lookup->id }}" title="Save"><span class="material-icons">save</span></button><form action="{{ route('lookup-values.destroy',$lookup) }}" method="POST" onsubmit="return confirm('Delete this lookup value?');">@csrf @method('DELETE')<button class="lookup-action delete" title="Delete"><span class="material-icons">delete_outline</span></button></form></div></td>
+                </tr>
+            @empty<tr><td colspan="7" class="lookup-empty"><span class="material-icons">playlist_add</span>No lookup values configured for {{ strtoupper($organization) }}.</td></tr>@endforelse
+            </tbody></table></div>
+            <div class="lookup-footer"><span>Showing {{ $lookupValues->firstItem() ?? 0 }} to {{ $lookupValues->lastItem() ?? 0 }} of {{ $lookupValues->total() }} records</span><span>{{ $lookupValues->links() }}</span></div>
+        </section>
     </div>
 </div>
+<script>
+(() => {
+    const rows = [...document.querySelectorAll('.lookup-row')];
+    const search = document.getElementById('lookupSearch');
+    const type = document.getElementById('lookupTypeFilter');
+    const filter = () => rows.forEach(row => row.hidden = !row.dataset.search.includes(search.value.toLowerCase().trim()) || (type.value && row.dataset.type !== type.value));
+    search?.addEventListener('input', filter); type?.addEventListener('change', filter);
+    document.querySelectorAll('.lookup-edit').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('.lookup-row.editing').forEach(row => row.classList.remove('editing'));
+        button.closest('.lookup-row').classList.add('editing');
+    }));
+})();
+</script>
 @endsection

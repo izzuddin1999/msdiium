@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use App\Models\PolicyDocument;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -28,6 +29,7 @@ class User extends Authenticatable
         'email',
         'role',
         'unit',
+        'organization_id',
         'is_active',
         'last_cas_sync_at',
         'password',
@@ -63,6 +65,16 @@ class User extends Authenticatable
         return $this->is_active && $this->role === $role;
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function organizationCode(): string
+    {
+        return strtoupper((string) ($this->organization?->code ?: ($this->unit === 'kcdiom' ? 'KCDIOM' : 'MSD')));
+    }
+
     public function isPolicyManager(): bool
     {
         return $this->is_active && in_array($this->role, ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'], true);
@@ -70,7 +82,7 @@ class User extends Authenticatable
 
     public function isSystemAdmin(): bool
     {
-        return $this->is_active && in_array($this->role, ['system_admin', 'msd_admin'], true);
+        return $this->is_active && $this->role === 'system_admin';
     }
 
     public function canAdministerAccess(): bool
@@ -85,12 +97,28 @@ class User extends Authenticatable
 
     public function actorLabel(): string
     {
-        return $this->isSystemAdmin() ? 'System Administrator' : ($this->isPolicyManager() ? 'Policy Manager (MSD/KCDIOM)' : 'Staff/Public');
+        if ($this->role === 'msd_admin') {
+            return 'MSD Administrator';
+        }
+
+        if ($this->isSystemAdmin()) {
+            return 'System Administrator';
+        }
+
+        if ($this->isKcdiomLiaison()) {
+            return 'KCDIOM Policy Manager';
+        }
+
+        if ($this->isPolicyManager()) {
+            return $this->organizationCode().' Policy Manager';
+        }
+
+        return 'Staff User';
     }
 
     public function isMsdAdmin(): bool
     {
-        return $this->isSystemAdmin();
+        return $this->is_active && $this->role === 'msd_admin';
     }
 
     public function isKcdiomLiaison(): bool

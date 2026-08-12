@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,10 +58,12 @@ class DirectorySyncController extends Controller
 
                 $row = array_map('trim', array_combine($header, $values));
                 $unit = strtolower($row['unit']);
+                $organizationCode = strtoupper($row['organization_code'] ?? ($unit === 'kcdiom' ? 'KCDIOM' : 'MSD'));
+                $organization = Organization::query()->where('code', $organizationCode)->where('is_active', true)->first();
                 if (! filter_var($row['email'], FILTER_VALIDATE_EMAIL) || ! in_array($unit, ['all', 'msd', 'kcdiom'], true)
-                    || $row['staff_id'] === '' || $row['cas_username'] === '' || $row['name'] === '') {
+                    || $row['staff_id'] === '' || $row['cas_username'] === '' || $row['name'] === '' || ! $organization) {
                     $rejected++;
-                    $errors[] = 'Row '.($index + 2).': invalid identity, email, or unit.';
+                    $errors[] = 'Row '.($index + 2).': invalid identity, email, unit, or organization code.';
                     continue;
                 }
 
@@ -71,6 +74,7 @@ class DirectorySyncController extends Controller
                     'name' => $row['name'],
                     'email' => $row['email'],
                     'unit' => $unit,
+                    'organization_id' => $organization->id,
                     'is_active' => true,
                     'last_cas_sync_at' => now(),
                 ];

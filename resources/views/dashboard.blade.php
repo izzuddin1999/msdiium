@@ -112,7 +112,11 @@
                 <h4>Topic governance map</h4>
                 <p>Live category and main-topic structure used by the document repository.</p>
             </div>
-            <a href="{{ route('topic-categories.index') }}">Manage topics <span class="material-icons">arrow_forward</span></a>
+            <a class="topic-manage-button" href="{{ route('topic-categories.index') }}">
+                <span class="material-icons" aria-hidden="true">account_tree</span>
+                <span>Manage topics</span>
+                <span class="material-icons topic-manage-arrow" aria-hidden="true">arrow_forward</span>
+            </a>
         </div>
         <div class="topic-dashboard-grid">
             @forelse($topicOverview as $category)

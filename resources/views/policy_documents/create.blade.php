@@ -45,30 +45,70 @@
 @endif
 
 <style>
-    .registration-intent{margin-bottom:20px;padding:18px 20px;border:1px solid #d7e8e3;border-radius:14px;background:#fff;box-shadow:0 7px 22px rgba(20,67,58,.06)}.registration-intent-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.registration-intent-head>.material-icons{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:#e8f6f3;color:#008f85}.registration-intent-head strong,.registration-intent-head small{display:block}.registration-intent-head strong{color:#123d37;font-size:16px}.registration-intent-head small{margin-top:2px;color:#748680}.intent-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.intent-option{position:relative;display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #d9e6e2;border-radius:11px;background:#fafcfb;cursor:pointer;transition:.18s}.intent-option:hover,.intent-option.active{border-color:#00a094;background:#eef9f6;box-shadow:0 5px 14px rgba(0,143,132,.08)}.intent-option input{position:absolute;opacity:0}.intent-option>.material-icons{color:#008f85}.intent-option strong,.intent-option small{display:block}.intent-option small{margin-top:2px;color:#788984}.modify-version-panel{display:none;margin-top:14px;padding:15px;border-radius:11px;background:#fff8e9;border:1px solid #f0dfb8}.modify-version-panel.active{display:block}.modify-version-panel .modify-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.modify-version-panel .form-label{font-size:12px;font-weight:700;color:#594719}.modify-version-panel .form-control{min-height:43px;border-radius:8px}.modify-version-panel .btn{min-height:43px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;font-weight:700}
+    .registration-intent{margin-bottom:18px;padding:14px 16px;border:1px solid #dde5e2;border-radius:12px;background:#fff;box-shadow:0 4px 14px rgba(25,52,47,.04)}.registration-intent-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}.registration-intent-head>.material-icons{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#edf6f4;color:#087e75;font-size:19px}.registration-intent-head strong,.registration-intent-head small{display:block}.registration-intent-head strong{color:#173b35;font-size:14px}.registration-intent-head small{margin-top:1px;color:#7a8985;font-size:11px}.intent-options{display:inline-flex;max-width:100%;gap:4px;padding:4px;border:1px solid #dce4e1;border-radius:10px;background:#f2f5f4}.intent-option{position:relative;display:flex;align-items:center;gap:7px;min-height:38px;padding:8px 13px;border:1px solid transparent;border-radius:7px;background:transparent;cursor:pointer;transition:.18s;color:#4d5d59}.intent-option:hover{color:#087e75;background:#f8fbfa}.intent-option.active{border-color:#cddbd7;background:#fff;color:#087e75;box-shadow:0 2px 7px rgba(35,65,59,.08)}.intent-option input{position:absolute;opacity:0}.intent-option>.material-icons{color:currentColor;font-size:18px}.intent-option strong{display:block;font-size:12px;white-space:nowrap}.intent-option small{display:none}.modify-version-panel{display:none;margin-top:12px;padding:13px;border-radius:9px;background:#fffaf0;border:1px solid #eadfca}.modify-version-panel.active{display:block}.modify-version-panel .modify-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:end}.modify-version-panel .form-label{font-size:11px;font-weight:700;color:#594719}.modify-version-panel .form-control{min-height:38px;border-radius:7px}.modify-version-panel .btn{min-height:38px;padding:7px 12px;display:inline-flex;align-items:center;gap:5px;border-radius:7px;font-size:12px;font-weight:700}
     .document-search{position:relative}.document-search-box{position:relative}.document-search-box>.material-icons{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:20px;color:#008f85;pointer-events:none}.document-search-box .form-control{padding-left:42px;padding-right:42px}.document-search-clear{display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:#70817c;cursor:pointer}.document-search-clear.visible{display:grid;place-items:center}.document-search-results{display:none;position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);max-height:250px;overflow-y:auto;padding:6px;background:#fff;border:1px solid #d5e2df;border-radius:10px;box-shadow:0 14px 30px rgba(28,64,57,.16)}.document-search-results.open{display:block}.document-search-result{width:100%;display:flex;align-items:flex-start;gap:10px;padding:10px 11px;border:0;border-radius:8px;background:#fff;text-align:left;color:#173e38;cursor:pointer}.document-search-result:hover,.document-search-result.active{background:#eaf8f5}.document-search-result>.material-icons{margin-top:1px;color:#009c92;font-size:20px}.document-search-result strong,.document-search-result small{display:block}.document-search-result small{margin-top:2px;color:#748680}.document-search-empty{padding:14px;text-align:center;color:#748680;font-size:13px}
-    .document-form { --form-accent:#009c92; border:1px solid #d9e8e4; border-radius:18px; box-shadow:0 18px 50px rgba(19,70,60,.10); overflow:hidden; background:#fff; }
-    .document-form-topbar { padding:18px 24px; color:#fff; background:linear-gradient(115deg,#075c51 0%,#008f85 58%,#25b6a4 100%); display:flex; justify-content:space-between; align-items:center; gap:20px; }
-    .document-form-topbar strong,.document-form-topbar small { display:block; }.document-form-topbar strong{font-size:17px}.document-form-topbar small{margin-top:3px;color:rgba(255,255,255,.78)}
-    .form-progress { display:flex; align-items:center; gap:8px; white-space:nowrap; }.form-progress span{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.17);font-size:12px;font-weight:800}.form-progress i{width:25px;height:2px;background:rgba(255,255,255,.35)}
-    .document-form .card-body { counter-reset:form-section; padding:20px 24px 22px; background:linear-gradient(180deg,#fbfdfc,#fff 180px); }
-    .document-form .form-section-title { counter-increment:form-section; position:relative; margin:7px 0 2px; padding:11px 16px 11px 58px; background:linear-gradient(90deg,#eaf8f5,#f8fcfb); border:1px solid #d7eae5; border-radius:11px; min-height:56px; display:flex; flex-direction:column; justify-content:center; }
+    .document-form { --form-accent:#0b8f85; border:1px solid #dde5e2; border-radius:14px; box-shadow:0 10px 30px rgba(31,54,49,.07); overflow:hidden; background:#fff; }
+    .document-form-topbar { padding:13px 20px; color:#183a34; background:#fff; border-top:3px solid var(--form-accent); border-bottom:1px solid #e0e7e5; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    .document-form-topbar strong,.document-form-topbar small { display:block; }.document-form-topbar strong{font-size:15px}.document-form-topbar small{margin-top:2px;color:#7a8985;font-size:11px}
+    .form-progress { display:flex; align-items:center; gap:7px; white-space:nowrap; }.form-progress span{width:24px;height:24px;display:grid;place-items:center;border:1px solid #d3dfdb;border-radius:50%;background:#f3f6f5;color:#687975;font-size:11px;font-weight:800}.form-progress span:first-child{border-color:var(--form-accent);background:var(--form-accent);color:#fff}.form-progress i{width:20px;height:1px;background:#d2dcda}
+    .document-form .card-body { counter-reset:form-section; padding:18px 22px 20px; background:#fff; }
+    .document-form .form-section-title { counter-increment:form-section; position:relative; margin:7px 0 2px; padding:9px 14px 9px 52px; background:#f7f9f8; border:1px solid #e0e6e4; border-radius:9px; min-height:50px; display:flex; flex-direction:column; justify-content:center; }
     .document-form .form-section-title:first-child { margin-top: 0; }
-    .document-form .form-section-title::before { content:counter(form-section); position:absolute; left:15px; top:50%; transform:translateY(-50%); width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,#007d73,#18ad9f);color:#fff;font-size:13px;font-weight:800;box-shadow:0 5px 12px rgba(0,125,115,.22); }
-    .document-form .form-section-title h6 { margin-bottom:2px; font-size:15px; font-weight:750; color:#103e37; }
-    .document-form .form-section-title small{color:#71847f;font-size:12px}
+    .document-form .form-section-title::before { content:counter(form-section); position:absolute; left:13px; top:50%; transform:translateY(-50%); width:27px;height:27px;display:grid;place-items:center;border-radius:7px;background:#e2f1ee;color:#087e75;font-size:12px;font-weight:800; }
+    .document-form .form-section-title h6 { margin-bottom:1px; font-size:14px; font-weight:750; color:#173b35; }
+    .document-form .form-section-title small{color:#7b8986;font-size:11px}
     .document-form .form-label { margin-bottom:5px; color:#183d38; font-size:12px; font-weight:700; }
+    .required-mark{margin-left:3px;color:#dc3545;font-weight:800}.required-note{display:inline-flex;align-items:center;gap:4px;color:#667b76;font-size:11px}.required-note .required-mark{margin-left:0}
     .document-form .form-control { min-height:43px; border-color:#d5e2df; border-radius:9px; background:#fff; font-size:13px; transition:border-color .2s,box-shadow .2s,transform .2s; }
     .document-form .form-control:focus { border-color: #009c92; box-shadow: 0 0 0 3px rgba(0, 156, 146, .12); }
     .document-form textarea.form-control { min-height: auto; }
-    .document-form .option-tile { min-height:43px; padding:10px 14px; border:1px solid #d5e2df; border-radius:9px; background:#f7fbfa; }
+    .document-form .ii-featured-field{padding:12px 14px;border:1px solid #dfe6e4;border-radius:9px;background:#fafbfb}
+    .document-form .ii-title-input{min-height:96px!important;height:auto!important;padding:12px 14px;border-left:3px solid #009c92;font-size:15px;font-weight:650;line-height:1.55;resize:vertical}
+    .document-form .ii-field-help{display:block;margin-top:6px;color:#71847f;font-size:10px}
+    .document-form .resizable-textarea{width:100%;max-width:100%;min-width:min(260px,100%);min-height:140px;resize:both;overflow:auto}
+    .document-form .resize-hint{display:flex;align-items:center;gap:4px;margin-top:5px;color:#71847f;font-size:10px}
+    .document-form .resize-hint .material-icons{font-size:13px}
+    .document-form .option-tile { min-height:40px; padding:8px 12px; border:1px solid #dfe5e3; border-radius:8px; background:#fafbfb; }
     .document-form .option-tile .form-check { margin: 0; }
     .document-form .form-section { border-top:0; padding-top:10px; margin-top:5px; }
     .document-form .card-footer { position:sticky;bottom:0;z-index:5;padding:14px 24px;background:rgba(247,250,249,.96);backdrop-filter:blur(10px);border-top:1px solid #dce8e4;box-shadow:0 -8px 24px rgba(21,65,56,.07); }
-    .document-form .card-footer .btn{min-height:42px;padding:9px 20px;border-radius:9px;font-weight:700}.document-form .card-footer .btn-primary{box-shadow:0 7px 15px rgba(0,156,146,.2)}
-    .document-form .content-field textarea,.document-form .remarks-field textarea{height:104px;resize:vertical}
+    .document-form .card-footer .btn{min-height:36px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700}.document-form .card-footer .btn-primary{box-shadow:0 4px 10px rgba(0,156,146,.14)}
+    .document-form .content-field textarea,.document-form .remarks-field textarea{height:auto;min-height:140px;resize:both}
     .document-form .dynamic-template>.row{box-shadow:inset 0 0 0 1px rgba(0,156,146,.03)}
-    @media (max-width:767px){.intent-options{grid-template-columns:1fr}.modify-version-panel .modify-grid{grid-template-columns:1fr}.document-form-topbar{align-items:flex-start;flex-direction:column}.document-form .card-body{padding:16px}.document-form .card-footer{padding:12px 16px}.form-progress{display:none}}
+
+    /* Latest IIUM governed-workspace visual standard */
+    .registration-intent{padding:12px 14px;border-color:#d7e6e2;border-radius:12px;box-shadow:0 8px 22px rgba(19,70,60,.06)}
+    .registration-intent-head>.material-icons{background:#e8f7f4;color:#078b80}
+    .registration-intent-head strong{color:#1f2937}
+    .registration-intent-head small{color:#708090}
+    .intent-options{gap:3px;padding:3px;border-color:#dbe3ea;background:#f4f6f8}
+    .intent-option{min-height:36px;padding:7px 12px;color:#53606d}
+    .intent-option:hover{color:#087e75;background:#f1faf8}
+    .intent-option.active{border-color:#8fd2c9;background:#eaf8f5;color:#087e75;box-shadow:none}
+    .modify-version-panel{background:#f2faf8;border-color:#cce7e1}
+    .modify-version-panel .form-label{color:#334155}
+    .document-search-box>.material-icons,.document-search-result>.material-icons{color:#078b80}
+    .document-search-result:hover,.document-search-result.active{background:#eaf8f5}
+    .document-form{--form-accent:#07998d;border-color:#d7e6e2;border-radius:18px;box-shadow:0 18px 50px rgba(19,70,60,.10)}
+    .document-form-topbar{padding:20px 26px;background:linear-gradient(115deg,#075c51 0%,#008f85 58%,#25b6a4 100%);color:#fff;border:0}
+    .document-form-topbar strong{font-size:17px}.document-form-topbar small{color:rgba(255,255,255,.78)}
+    .document-form-topbar .required-note{color:rgba(255,255,255,.9)}.document-form-topbar .required-mark{color:#ffd8d4}
+    .form-progress span:first-child{border-color:var(--form-accent);background:var(--form-accent)}
+    .document-form .card-body{padding:24px 26px;background:linear-gradient(180deg,#fbfdfc,#fff 220px)}
+    .document-form .form-section-title{min-height:58px;padding:12px 16px 12px 66px;background:linear-gradient(90deg,#eaf8f5,#f8fcfb);border-color:#d7eae5;border-radius:11px}
+    .document-form .form-section-title::before{left:17px;width:35px;height:35px;border-radius:10px;background:linear-gradient(135deg,#007d73,#18ad9f);color:#fff;box-shadow:0 5px 12px rgba(0,125,115,.22)}
+    .document-form .form-section-title h6{font-size:15px}.document-form .form-section-title small{font-size:12px}
+    .document-form .form-section-title h6,.document-form .form-label{color:#1f2937}
+    .document-form .form-control{border-color:#d7dee5}
+    .document-form .form-control:focus{border-color:#009c92;box-shadow:0 0 0 3px rgba(0,156,146,.12)}
+    .document-form .ii-featured-field{padding:14px 16px;background:linear-gradient(135deg,#f2faf8 0%,#fff 72%);border-color:#d8e7e3;border-radius:12px}
+    .document-form .ii-title-input{min-height:96px!important;border-left:4px solid #009c92;font-size:17px}
+    .document-form .option-tile{background:#fbfcfd;border-color:#e1e6eb}
+    .document-form .content-field textarea{min-height:170px}
+    .document-form .remarks-field textarea{min-height:130px}
+    .document-form .card-footer{padding:14px 26px;background:rgba(247,250,249,.97);border-color:#dce8e4;box-shadow:0 -8px 24px rgba(21,65,56,.07)}
+    .document-form .card-footer .btn{min-height:42px;padding:9px 20px;border-radius:9px}.document-form .card-footer .btn-primary{box-shadow:0 5px 14px rgba(0,156,146,.20)}
+    @media (max-width:767px){.intent-options{display:grid;width:100%;grid-template-columns:1fr}.intent-option{justify-content:center}.modify-version-panel .modify-grid{grid-template-columns:1fr}.document-form-topbar{align-items:flex-start;flex-direction:column}.document-form .card-body{padding:16px}.document-form .card-footer{padding:12px 16px}.form-progress{display:none}}
 </style>
 
 <div class="registration-intent" id="registrationIntent">
@@ -89,7 +129,7 @@
                 <input type="hidden" id="rootDocumentUrl" value="">
                 <div class="document-search-results" id="rootDocumentSearchResults" role="listbox"></div>
             </div>
-            <button type="button" class="btn btn-warning" id="continueVersionButton" disabled><span class="material-icons">history</span>Continue to new version</button>
+            <button type="button" class="btn btn-primary btn-sm" id="continueVersionButton" disabled><span class="material-icons">history</span>Continue to new version</button>
         </div>
         @if($rootDocuments->isEmpty())<small class="d-block mt-2 text-muted">No Version 1 documents are available to modify.</small>@else<small class="d-block mt-2 text-muted">Version 1 will remain unchanged. Your modification will be saved as the next version.</small>@endif
     </div>
@@ -99,31 +139,33 @@
     @csrf
     <div class="document-form-topbar">
         <div><strong>Document registration workspace</strong><small>Complete all required governance information before saving the record.</small></div>
+        <span class="required-note"><span class="required-mark" aria-hidden="true">*</span> Required field</span>
         <div class="form-progress" aria-label="Form sections"><span>1</span><i></i><span>2</span><i></i><span>3</span><i></i><span>4</span></div>
     </div>
     <div class="card-body row g-3">
         <div class="col-12 form-section-title"><h6>Document details</h6><small>Choose the document type first, then enter its official identity and classification.</small></div>
-        <div class="col-md-6 col-lg-4">
-            <label class="form-label">Document Type</label>
+        <div class="col-12 ii-featured-field">
+            <label class="form-label" for="documentTitle">Document Title <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+            <textarea id="documentTitle" name="title" class="form-control ii-title-input" rows="3" maxlength="255" placeholder="Enter the official document title" required>{{ old('title') }}</textarea>
+            <small class="ii-field-help">Use the complete approved title as it should appear in the repository.</small>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Document Type <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
             <select name="document_type" class="form-control" required>
                 @foreach($documentTypes as $type => $label)
                     <option value="{{ $type }}" @selected(old('document_type') === $type)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="col-md-6 col-lg-4">
-            <label class="form-label">Status</label>
+        <div class="col-md-4">
+            <label class="form-label">Status <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
             <select name="status" class="form-control" required>
                 @foreach($documentStatuses as $status => $label)
                     <option value="{{ $status }}" @selected(old('status') === $status)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="col-md-6 col-lg-4">
-            <label class="form-label">Title</label>
-            <input name="title" class="form-control" value="{{ old('title') }}" required>
-        </div>
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-4">
             <label class="form-label">Official Reference Number</label>
             <input name="reference_number" class="form-control" value="{{ old('reference_number') }}" maxlength="100">
         </div>
@@ -163,25 +205,19 @@
             </select>
         </div>
 
-        <div class="col-12 form-section-title form-section"><h6>Access scope</h6><small>Control who can access and view this document.</small></div>
+        <div class="col-12 form-section-title form-section"><h6>Ownership and access</h6><small>Choose which permitted users can access and view this document.</small></div>
         <div class="col-md-6 col-lg-4">
-            <label class="form-label">Access Scope</label>
+            <label class="form-label">Permitted Users <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
             <select name="access_scope" class="form-control" required>
-                @foreach(['all','kcdiom','msd'] as $scope)
-                    <option value="{{ $scope }}" @selected(old('access_scope') === $scope)>{{ strtoupper($scope) }}</option>
+                @foreach(['all', $managementUnit] as $scope)
+                    <option value="{{ $scope }}" @selected(old('access_scope') === $scope)>{{ $scope === 'all' ? 'All permitted users' : strtoupper($scope).' permitted users' }}</option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-6 col-lg-4 d-flex align-items-end">
             <div class="option-tile w-100 d-flex align-items-center"><div class="form-check">
-                <input class="form-check-input" type="checkbox" name="is_circular" value="1" id="isCircular" @checked(old('is_circular'))>
-                <label class="form-check-label" for="isCircular">Set as Circular</label>
-            </div></div>
-        </div>
-        <div class="col-md-6 col-lg-4 d-flex align-items-end">
-            <div class="option-tile w-100 d-flex align-items-center"><div class="form-check">
                 <input class="form-check-input" type="checkbox" name="public_flag" value="1" id="publicFlag" @checked(old('public_flag'))>
-                <label class="form-check-label" for="publicFlag">Publicly visible</label>
+                <label class="form-check-label" for="publicFlag">Show on public portal</label>
             </div></div>
         </div>
 
@@ -222,7 +258,7 @@
                             @elseif($field->type === 'paragraph')
                                 <p class="text-muted mb-0">{{ $field->default_value ?: $field->help_text }}</p>
                             @elseif($field->type === 'textarea')
-                                <textarea class="form-control" id="dynamic_{{ $field->id }}" name="{{ $fieldName }}" rows="3" placeholder="{{ $field->placeholder }}" disabled>{{ old($oldKey, $field->default_value) }}</textarea>
+                                <textarea class="form-control resizable-textarea" id="dynamic_{{ $field->id }}" name="{{ $fieldName }}" rows="3" placeholder="{{ $field->placeholder }}" disabled>{{ old($oldKey, $field->default_value) }}</textarea>
                             @elseif(in_array($field->type, ['select','multi_select'], true))
                                 <select class="form-control" id="dynamic_{{ $field->id }}" name="{{ $fieldName }}{{ $field->type === 'multi_select' ? '[]' : '' }}" @if($field->type === 'multi_select') multiple @endif disabled>
                                     @if($field->type === 'select')<option value="">{{ $field->placeholder ?: 'Select an option' }}</option>@endif
@@ -247,12 +283,14 @@
 
         <div class="col-12 form-section-title form-section"><h6>Content and validity</h6><small>Add searchable content, effective dates, and the controlled source file.</small></div>
         <div class="col-lg-8 content-field">
-            <label class="form-label">Content</label>
-            <textarea name="content" class="form-control" rows="4" placeholder="Enter searchable document content or a concise executive summary..." required>{{ old('content') }}</textarea>
+            <label class="form-label">Content <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+            <textarea name="content" class="form-control resizable-textarea" rows="4" placeholder="Enter searchable document content or a concise executive summary..." required>{{ old('content') }}</textarea>
+            <small class="resize-hint"><span class="material-icons">open_in_full</span>Drag the lower-right corner to resize this field.</small>
         </div>
         <div class="col-lg-4 remarks-field">
             <label class="form-label">Remarks</label>
-            <textarea name="remarks" class="form-control" rows="4" maxlength="2000" placeholder="Optional internal notes...">{{ old('remarks') }}</textarea>
+            <textarea name="remarks" class="form-control resizable-textarea" rows="4" maxlength="2000" placeholder="Optional internal notes...">{{ old('remarks') }}</textarea>
+            <small class="resize-hint"><span class="material-icons">open_in_full</span>Drag the lower-right corner to resize this field.</small>
         </div>
 
         <div class="col-md-6 col-lg-4">
@@ -270,7 +308,7 @@
         </div>
     </div>
     <div class="card-footer d-flex gap-2">
-        <button class="btn btn-primary">Save As</button>
+        <button class="btn btn-primary" type="submit"><span class="material-icons align-middle me-1" style="font-size:18px">save</span>Register document</button>
         <a href="{{ route('policy-documents.index') }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
