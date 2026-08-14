@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\PolicyDocument;
 use App\Observers\PolicyDocumentObserver;
 use App\Models\User;
+use App\Models\Organization;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -90,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
             if (! Schema::hasTable('users')) {
                 $view->with('viewerOptions', collect());
                 $view->with('recentNotifications', collect());
+                $view->with('publicOrganizations', collect());
 
                 return;
             }
@@ -104,6 +106,9 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('recentNotifications', $viewer?->notifications()->latest()->limit(5)->get() ?? collect());
             $view->with('unreadNotificationCount', $viewer?->unreadNotifications()->count() ?? 0);
+            $view->with('publicOrganizations', Schema::hasTable('organizations')
+                ? Organization::query()->where('is_active', true)->orderBy('name')->get()
+                : collect());
         });
     }
 }

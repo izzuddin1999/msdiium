@@ -80,7 +80,7 @@ class User extends Authenticatable
 
     public function isPolicyManager(): bool
     {
-        return $this->is_active && in_array($this->role, ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'], true);
+        return $this->is_active && in_array($this->role, ['system_admin', 'msd_admin', 'kcdiom_liaison'], true);
     }
 
     public function isSystemAdmin(): bool
@@ -109,11 +109,7 @@ class User extends Authenticatable
         }
 
         if ($this->isKcdiomLiaison()) {
-            return 'KCDIOM Policy Manager';
-        }
-
-        if ($this->isPolicyManager()) {
-            return $this->organizationCode().' Policy Manager';
+            return ($this->organization?->code ?: 'Organization').' Liaison';
         }
 
         return 'Staff User';

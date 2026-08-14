@@ -10,7 +10,7 @@
 @endphp
 <section class="detail-hero">
     <div class="portal-container">
-        <a class="back-link" href="{{ route($directoryRoute) }}#directory">&larr; Back to {{ $document->owner_unit === 'msd' ? 'MSD' : 'KCDIOM' }} directory</a>
+        <a class="back-link" href="{{ route($directoryRoute) }}#directory">&larr; Back to {{ $document->owner_unit === 'msd' ? 'MSD' : 'AIKOL' }} directory</a>
         <div class="detail-title-grid">
             <div><span class="eyebrow">OFFICIAL PUBLIC DOCUMENT</span><h1>{{ $document->title }}</h1><p>{{ $document->reference_number ?: 'No official reference number' }}</p></div>
             <div class="detail-badges"><span>{{ str($document->document_type)->replace('_', ' ')->title() }}</span><span>Version {{ $document->version_number }}</span><span>Published</span></div>

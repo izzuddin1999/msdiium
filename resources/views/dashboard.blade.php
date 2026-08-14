@@ -23,7 +23,7 @@
                 <h4>One governed workflow for MSD and KCDIOM</h4>
                 <p>MSD is part of KCDIOM. You can maintain documents across both owner units; system access and audit administration remain with the administrator.</p>
             </div>
-            <span class="liaison-role-badge"><span class="material-icons">verified_user</span> Policy Manager</span>
+            <span class="liaison-role-badge"><span class="material-icons">verified_user</span> AIKOL Liaison</span>
         </div>
         <div class="liaison-steps">
             <a href="{{ route('policy-documents.create') }}">
@@ -50,8 +50,8 @@
         <div class="staff-directory-heading">
             <div>
                 <span class="eyebrow">KCDIOM public document directory</span>
-                <h4>Browse KCDIOM units</h4>
-                <p>MSD is part of KCDIOM. Select MSD or another KCDIOM unit group to view documents available to staff.</p>
+                <h4>Browse KCDIOM</h4>
+
             </div>
             <span class="staff-directory-total">{{ $metrics['total'] }} accessible {{ Str::plural('record', $metrics['total']) }}</span>
         </div>
@@ -60,7 +60,7 @@
                 <a class="staff-unit-card staff-unit-{{ $unit['unit'] }}" href="{{ route('policy-documents.index', ['unit' => $unit['unit']]) }}">
                     <span class="staff-unit-icon material-icons">{{ $unit['icon'] }}</span>
                     <span class="staff-unit-content">
-                        <span class="staff-parent-label">KCDIOM unit</span>
+                        <span class="staff-parent-label">KCDIOM </span>
                         <span class="staff-unit-code">{{ $unit['code'] }}</span>
                         <strong>{{ $unit['name'] }}</strong>
                         <small>{{ $unit['latest'] ? 'Latest: '.$unit['latest'] : 'No accessible publications yet' }}</small>

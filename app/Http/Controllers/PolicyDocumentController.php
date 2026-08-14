@@ -112,6 +112,10 @@ class PolicyDocumentController extends Controller
             $query->where('subtopic_id', (int) $request->input('subtopic_id'));
         }
 
+        if ($request->filled('topic_detail_id')) {
+            $query->where('topic_detail_id', (int) $request->input('topic_detail_id'));
+        }
+
         if ($request->filled('q')) {
             $search = '%' . $request->string('q') . '%';
             $query->where(function ($builder) use ($search): void {
@@ -133,6 +137,24 @@ class PolicyDocumentController extends Controller
 
         $documents = $this->decoratePaginator($query->paginate(12)->withQueryString());
         $this->attachVersionFamilies($documents->getCollection(), $viewer);
+        $managedTopicUnit = $request->filled('unit') && in_array($request->string('unit')->toString(), ['msd', 'kcdiom'], true)
+            ? $request->string('unit')->toString()
+            : ($canManageDocuments ? $this->organizationUnit($viewer) : null);
+        $managedOrganizationId = $canManageDocuments && ! $viewer?->isSystemAdmin() ? $viewer?->organization_id : null;
+        $managedTopics = TopicCategory::query()
+            ->where('is_active', true)
+            ->when($managedOrganizationId,
+                fn ($topicQuery) => $topicQuery->where('organization_id', $managedOrganizationId),
+                fn ($topicQuery) => $topicQuery->when($managedTopicUnit, fn ($legacyQuery) => $legacyQuery->where('owner_unit', $managedTopicUnit)))
+            ->with(['subtopics' => fn ($mainTopicQuery) => $mainTopicQuery
+                ->where('is_active', true)
+                ->with(['details' => fn ($detailQuery) => $detailQuery->where('is_active', true)->orderBy('sort_order')->orderBy('name')])
+                ->orderBy('sort_order')
+                ->orderBy('name')])
+            ->orderBy('owner_unit')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         $showMsdDashboard = $request->string('unit')->toString() === 'msd' && ! $canManageDocuments;
         $msdTopicDashboard = $showMsdDashboard
             ? TopicCategory::query()
@@ -174,6 +196,7 @@ class PolicyDocumentController extends Controller
                 : null,
             'showMsdDashboard' => $showMsdDashboard,
             'msdTopicDashboard' => $msdTopicDashboard,
+            'managedTopics' => $managedTopics,
             'formTemplates' => config('features.form_builder') ? FormTemplate::where('is_active', true)->orderBy('name')->get(['id', 'name']) : collect(),
         ]);
     }
@@ -207,7 +230,8 @@ class PolicyDocumentController extends Controller
         $this->ensureCanManageDocuments($viewer);
 
         $submittedTitle = preg_replace('/\s+/u', ' ', trim((string) $request->input('title')));
-        $ownerUnit = $viewer?->isKcdiomLiaison() ? 'kcdiom' : 'msd';
+        $ownerUnit = $this->organizationUnit($viewer);
+        $organizationId = $viewer?->organization_id;
         $exists = $submittedTitle !== '' && PolicyDocument::query()
             ->whereNull('parent_document_id')
             ->where('owner_unit', $ownerUnit)
@@ -227,8 +251,8 @@ class PolicyDocumentController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'reference_number' => ['nullable', 'string', 'max:100', Rule::unique(PolicyDocument::class, 'reference_number')],
             'document_type' => ['required', Rule::in($this->lookupCodes('DOCUMENT_TYPE', ['policy', 'guideline', 'circular']))],
-            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true)->where('owner_unit', $ownerUnit))],
-            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('topic_category_id', TopicCategory::where('owner_unit', $ownerUnit)->select('id')))],
+            'topic_category' => ['nullable', Rule::exists('topic_categories', 'slug')->where(fn ($query) => $query->where('is_active', true)->when($organizationId, fn ($q) => $q->where('organization_id', $organizationId), fn ($q) => $q->where('owner_unit', $ownerUnit)))],
+            'subtopic_id' => ['nullable', Rule::exists('topic_subtopics', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('topic_category_id', TopicCategory::query()->when($organizationId, fn ($q) => $q->where('organization_id', $organizationId), fn ($q) => $q->where('owner_unit', $ownerUnit))->select('id')))],
             'topic_detail_id' => ['nullable', Rule::exists('topic_details', 'id')->where(fn ($query) => $query->where('is_active', true)->whereIn('main_topic_id', TopicSubtopic::whereIn('topic_category_id', TopicCategory::where('owner_unit', $ownerUnit)->select('id'))->select('id')))],
             'content' => ['required', 'string'],
             'revision_summary' => ['nullable', 'string', 'max:1000'],
@@ -799,7 +823,7 @@ class PolicyDocumentController extends Controller
 
         return User::query()
             ->where('is_active', true)
-            ->whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'])
+            ->whereIn('role', ['system_admin', 'msd_admin', 'kcdiom_liaison'])
             ->where($unitScope)
             ->orderBy('name')
             ->get();
@@ -811,7 +835,7 @@ class PolicyDocumentController extends Controller
             $nullable ? 'nullable' : null,
             Rule::exists('users', 'id')->where(function ($query): void {
                 $query->where('is_active', true)
-                    ->whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison']);
+                    ->whereIn('role', ['system_admin', 'msd_admin', 'kcdiom_liaison']);
             }),
         ]);
     }
@@ -828,7 +852,9 @@ class PolicyDocumentController extends Controller
     private function topicCategoryOptions()
     {
         return TopicCategory::query()
-            ->where('owner_unit', $this->organizationUnit(request()->user()))
+            ->when(request()->user()?->organization_id,
+                fn ($query, $organizationId) => $query->where('organization_id', $organizationId),
+                fn ($query) => $query->where('owner_unit', $this->organizationUnit(request()->user())))
             ->where('is_active', true)
             ->orderBy('name')
             ->pluck('name', 'slug');
@@ -840,7 +866,9 @@ class PolicyDocumentController extends Controller
             ->select(['id', 'topic_category_id', 'name'])
             ->with('mainTopic:id,slug,name')
             ->where('is_active', true)
-            ->whereHas('mainTopic', fn ($query) => $query->where('is_active', true)->where('owner_unit', $this->organizationUnit(request()->user())))
+            ->whereHas('mainTopic', fn ($query) => $query->where('is_active', true)->when(request()->user()?->organization_id,
+                fn ($query, $organizationId) => $query->where('organization_id', $organizationId),
+                fn ($query) => $query->where('owner_unit', $this->organizationUnit(request()->user()))))
             ->orderBy('name')
             ->get();
     }
@@ -850,7 +878,9 @@ class PolicyDocumentController extends Controller
         return TopicDetail::query()
             ->select(['id', 'main_topic_id', 'name'])
             ->where('is_active', true)
-            ->whereHas('mainTopic.mainTopic', fn ($query) => $query->where('owner_unit', $this->organizationUnit(request()->user())))
+            ->whereHas('mainTopic.mainTopic', fn ($query) => $query->when(request()->user()?->organization_id,
+                fn ($query, $organizationId) => $query->where('organization_id', $organizationId),
+                fn ($query) => $query->where('owner_unit', $this->organizationUnit(request()->user()))))
             ->orderBy('name')
             ->get();
     }
@@ -1000,11 +1030,15 @@ class PolicyDocumentController extends Controller
 
     private function ensureOwnerUnitAccess(?User $user, string $ownerUnit): void
     {
-        abort_unless($user?->canManagePolicies() && $ownerUnit === $this->organizationUnit($user), 403);
+        abort_unless($user?->canManagePolicies() && ($user->isSystemAdmin() || $ownerUnit === $this->organizationUnit($user)), 403);
     }
 
     private function organizationUnit(?User $user): string
     {
+        if ($user?->organization && strtoupper($user->organization->code) !== 'MSD') {
+            return 'kcdiom';
+        }
+
         return $user?->unit === 'kcdiom' ? 'kcdiom' : 'msd';
     }
 

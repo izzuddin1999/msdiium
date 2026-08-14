@@ -52,8 +52,12 @@
                 <a href="{{ route('public-portal') }}#directory"><span class="material-icons">description</span><span>Browse Documents</span></a>
                 <a href="{{ route('public-portal') }}#advanced-search"><span class="material-icons">search</span><span>Advanced Search</span></a>
                 <div class="nav-label">Browse by directory</div>
-                <a class="{{ request()->routeIs('public.msd') ? 'active' : '' }}" href="{{ route('public.msd') }}"><span class="material-icons">account_balance</span><span>MSD Directory</span></a>
-                <a class="{{ request()->routeIs('public.kcdiom') ? 'active' : '' }}" href="{{ route('public.kcdiom') }}"><span class="material-icons">domain</span><span>KCDIOM Directory</span></a>
+                @foreach($publicOrganizations as $directoryOrganization)
+                    <a class="{{ (string) request('organization') === (string) $directoryOrganization->id ? 'active' : '' }}" href="{{ route('public-portal', ['organization' => $directoryOrganization->id]) }}">
+                        <span class="material-icons">{{ ['kulliyyah' => 'school', 'centre' => 'hub', 'division' => 'account_balance', 'institute' => 'science', 'office' => 'business_center'][$directoryOrganization->organization_type] ?? 'domain' }}</span>
+                        <span>{{ $directoryOrganization->code === 'KCDIOM' ? 'AIKOL' : strtoupper($directoryOrganization->code) }} Directory</span>
+                    </a>
+                @endforeach
                 <a href="{{ route('public-portal') }}#about"><span class="material-icons">info_outline</span><span>About This Portal</span></a>
                 <a href="{{ route('public-portal') }}#help"><span class="material-icons">help_outline</span><span>Help &amp; FAQ</span></a>
             @endif

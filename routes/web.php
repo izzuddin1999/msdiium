@@ -7,6 +7,7 @@ use App\Http\Controllers\FormTemplateController;
 use App\Http\Controllers\LookupValueController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationProfileController;
+use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PolicyDocumentController;
 use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\ReportingDashboardController;
@@ -68,6 +69,10 @@ Route::get('/reports/dashboard', [ReportingDashboardController::class, 'index'])
 Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
 Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
 Route::put('/roles/{user}', [RoleManagementController::class, 'update'])->name('roles.update');
+Route::delete('/roles/{user}', [RoleManagementController::class, 'destroy'])->name('roles.destroy');
+Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
+Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
+Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
 
 Route::get('/topic-categories', [TopicCategoryController::class, 'index'])->name('topic-categories.index');
 Route::post('/topic-categories', [TopicCategoryController::class, 'store'])->name('topic-categories.store');

@@ -184,7 +184,18 @@ class PolicyDocument extends Model
         }
 
         if ($user->canManagePolicies()) {
-            return $query->where('owner_unit', $user->unit === 'kcdiom' ? 'kcdiom' : 'msd');
+            if ($user->isSystemAdmin()) {
+                return $query;
+            }
+
+            return $query->where(function (Builder $builder) use ($user): void {
+                if ($user->organization_id) {
+                    $builder->where('organization_id', $user->organization_id)
+                        ->orWhere(fn (Builder $legacy) => $legacy->whereNull('organization_id')->where('owner_unit', $user->unit));
+                } else {
+                    $builder->where('owner_unit', $user->unit === 'kcdiom' ? 'kcdiom' : 'msd');
+                }
+            });
         }
 
         return $query->whereIn('status', ['published', 'superseded'])->where(function (Builder $builder) use ($user): void {

@@ -24,7 +24,7 @@ class SendDocumentExpiryReminders extends Command
             ->get();
         $managers = User::query()
             ->where('is_active', true)
-            ->whereIn('role', ['policy_manager', 'msd_admin', 'kcdiom_liaison'])
+            ->whereIn('role', ['msd_admin', 'kcdiom_liaison'])
             ->get();
         $dispatchCount = 0;
 

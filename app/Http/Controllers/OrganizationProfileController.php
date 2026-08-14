@@ -19,13 +19,15 @@ class OrganizationProfileController extends Controller
     {
         abort_unless($request->user()?->canManagePolicies(), 403);
         $organization = $this->organization($request);
-        $profile = OrganizationProfile::query()
-            ->where('organization_id', $organization->id)
-            ->firstOrFail();
+        $profile = $this->profileFor($organization);
 
         return view('organization_profiles.show', [
             'profile' => $profile,
             'organization' => strtolower($organization->code),
+            'selectedOrganization' => $organization,
+            'organizations' => $request->user()?->isSystemAdmin()
+                ? Organization::query()->where('is_active', true)->orderBy('name')->get()
+                : collect([$organization]),
             'canEdit' => true,
             'metrics' => [
                 'documents' => PolicyDocument::where('organization_id', $organization->id)->count(),
@@ -39,7 +41,7 @@ class OrganizationProfileController extends Controller
             'managers' => User::query()
                 ->where('organization_id', $organization->id)
                 ->where('is_active', true)
-                ->whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'])
+                ->whereIn('role', ['system_admin', 'msd_admin', 'kcdiom_liaison'])
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -48,9 +50,7 @@ class OrganizationProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         abort_unless($request->user()?->canManagePolicies(), 403);
-        $profile = OrganizationProfile::query()
-            ->where('organization_id', $this->organization($request)->id)
-            ->firstOrFail();
+        $profile = $this->profileFor($this->organization($request));
         $data = $request->validate([
             'name' => ['required', 'string', 'max:180'],
             'short_name' => ['required', 'string', 'max:40'],
@@ -62,11 +62,17 @@ class OrganizationProfileController extends Controller
         ]);
         $profile->update($data);
 
-        return back()->with('status', strtoupper($profile->code).' organization profile updated successfully.');
+        return redirect()->route('organization-profile.show', $request->user()?->isSystemAdmin()
+            ? ['organization' => $profile->organization_id]
+            : [])->with('status', strtoupper($profile->code).' organization profile updated successfully.');
     }
 
     private function organization(Request $request): Organization
     {
+        if ($request->user()?->isSystemAdmin() && $request->filled('organization')) {
+            return Organization::query()->where('is_active', true)->findOrFail((int) $request->input('organization'));
+        }
+
         if ($request->user()?->organization_id) {
             return Organization::query()->findOrFail($request->user()->organization_id);
         }
@@ -74,5 +80,19 @@ class OrganizationProfileController extends Controller
         $code = $request->user()?->unit === 'kcdiom' ? 'KCDIOM' : 'MSD';
 
         return Organization::query()->where('code', $code)->firstOrFail();
+    }
+
+    private function profileFor(Organization $organization): OrganizationProfile
+    {
+        return OrganizationProfile::query()->firstOrCreate(
+            ['organization_id' => $organization->id],
+            [
+                'code' => strtolower($organization->code),
+                'name' => $organization->name,
+                'short_name' => strtoupper($organization->code === 'KCDIOM' ? 'AIKOL' : $organization->code),
+                'description' => null,
+                'is_active' => $organization->is_active,
+            ]
+        );
     }
 }

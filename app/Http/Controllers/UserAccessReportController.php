@@ -20,7 +20,7 @@ class UserAccessReportController extends Controller
             'summary' => [
                 'total' => User::count(),
                 'active' => User::where('is_active', true)->count(),
-                'managers' => User::whereIn('role', ['system_admin', 'policy_manager', 'msd_admin', 'kcdiom_liaison'])->count(),
+                'managers' => User::whereIn('role', ['system_admin', 'msd_admin', 'kcdiom_liaison'])->count(),
                 'staff' => User::where('role', 'staff_user')->count(),
             ],
         ]);

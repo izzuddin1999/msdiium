@@ -20,7 +20,7 @@
 
 <form method="GET" class="row g-2 flow-toolbar">
     <div class="col-lg-4"><input name="q" class="form-control" value="{{ request('q') }}" placeholder="Name, email, staff ID, or CAS username"></div>
-    <div class="col-lg-2"><select name="role" class="form-control"><option value="">All roles</option><option value="policy_manager" @selected(request('role') === 'policy_manager')>Policy Manager</option><option value="staff_user" @selected(request('role') === 'staff_user')>Staff User</option></select></div>
+    <div class="col-lg-2"><select name="role" class="form-control"><option value="">All roles</option><option value="msd_admin" @selected(request('role') === 'msd_admin')>MSD Administrator</option><option value="kcdiom_liaison" @selected(request('role') === 'kcdiom_liaison')>AIKOL Liaison</option><option value="staff_user" @selected(request('role') === 'staff_user')>Staff User</option></select></div>
     <div class="col-lg-2"><select name="unit" class="form-control"><option value="">All units</option>@foreach(['all' => 'All', 'msd' => 'MSD', 'kcdiom' => 'KCDIOM'] as $value => $label)<option value="{{ $value }}" @selected(request('unit') === $value)>{{ $label }}</option>@endforeach</select></div>
     <div class="col-lg-2"><select name="status" class="form-control"><option value="">All statuses</option><option value="active" @selected(request('status') === 'active')>Active</option><option value="inactive" @selected(request('status') === 'inactive')>Inactive</option></select></div>
     <div class="col-lg-2 d-flex gap-2"><button class="btn btn-secondary flex-grow-1">Apply</button>@if(request()->query())<a href="{{ route('reports.user-access') }}" class="btn btn-light border">Clear</a>@endif</div>

@@ -89,6 +89,9 @@
 </style>
 <style>
     /* Accessible metadata sizing for the governed record panel. */
+    /* Use a neutral article symbol so related records are not mistaken for spreadsheets. */
+    .detail-related-icon{background:#eaf2ff!important;color:#2563a8!important;font-size:0!important}
+    .detail-related-icon::before{content:'article';font-family:'Material Icons';font-size:18px;font-weight:normal;font-style:normal;line-height:1}
     .document-detail-page .record-card .card-header h5{font-size:18px!important;line-height:1.3!important}
     .document-detail-page .record-card .row>.col-md-6 strong{font-size:12px!important;line-height:1.5!important}
     .document-detail-page .record-card .row>.col-md-6>div{font-size:13px!important;line-height:1.5!important}

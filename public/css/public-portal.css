@@ -49,3 +49,9 @@ body{font-size:inherit}
 .header-signout button:hover,.header-signout button:focus-visible{background:#fff;color:var(--teal)}
 .header-signout .material-icons{font-size:1.125rem}
 @media(max-width:560px){.header-signout button{width:2.125rem;height:2.125rem}}
+
+/* Give public document PDFs a larger, more comfortable reading area. */
+@media(min-width:1081px){
+    .portal-container.detail-layout{width:min(1450px,calc(100% - 48px));grid-template-columns:minmax(460px,.9fr) minmax(560px,1.1fr)}
+    .preview-card iframe{height:min(82vh,900px);min-height:760px}
+}

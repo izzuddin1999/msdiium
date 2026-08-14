@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <style>
@@ -9,6 +9,12 @@
 </style>
 
 <div class="breadcrumb-flow"><a href="{{ route('dashboard') }}">Dashboard</a><span class="material-icons">chevron_right</span><span>Organization profile</span></div>
+@if(request()->user()?->isSystemAdmin())
+    <form method="GET" action="{{ route('organization-profile.show') }}" class="org-card mb-3 p-3 d-flex flex-row align-items-end gap-3">
+        <div class="flex-grow-1"><label class="form-label fw-bold">Manage organization profile</label><select name="organization" class="form-control" onchange="this.form.submit()">@foreach($organizations as $organizationOption)<option value="{{ $organizationOption->id }}" @selected($selectedOrganization->id === $organizationOption->id)>{{ $organizationOption->code === 'KCDIOM' ? 'AIKOL' : $organizationOption->code }} â€” {{ $organizationOption->name }}</option>@endforeach</select></div>
+        <a href="{{ route('roles.index') }}" class="btn btn-outline-primary"><span class="material-icons align-middle me-1" style="font-size:18px">add_business</span>Add organization</a>
+    </form>
+@endif
 <section class="org-profile-hero">
     <div class="org-profile-identity">
         <span class="org-profile-mark">{{ $profile->short_name }}</span>
@@ -35,6 +41,7 @@
         <form action="{{ route('organization-profile.update') }}" method="POST" class="org-form">
             @csrf
             @method('PUT')
+            @if(request()->user()?->isSystemAdmin())<input type="hidden" name="organization" value="{{ $selectedOrganization->id }}">@endif
             <div class="row g-3">
                 <div class="col-md-8"><label class="form-label">Official name</label><input name="name" class="form-control" value="{{ old('name', $profile->name) }}" required @disabled(!$canEdit)></div>
                 <div class="col-md-4"><label class="form-label">Short name</label><input name="short_name" class="form-control" value="{{ old('short_name', $profile->short_name) }}" required @disabled(!$canEdit)></div>
@@ -58,7 +65,7 @@
         <div class="org-card-head"><h5>Assigned managers</h5><p>Active management accounts for {{ $profile->short_name }}</p></div>
         <div class="org-manager-list">
             @forelse($managers as $manager)
-                <div class="org-manager"><span class="avatar-circle">{{ strtoupper(substr($manager->name, 0, 1)) }}</span><span><strong>{{ $manager->name }}</strong><small>{{ $manager->email }} · {{ $manager->actorLabel() }}</small></span></div>
+                <div class="org-manager"><span class="avatar-circle">{{ strtoupper(substr($manager->name, 0, 1)) }}</span><span><strong>{{ $manager->name }}</strong><small>{{ $manager->email }} &middot; {{ $manager->actorLabel() }}</small></span></div>
             @empty
                 <div class="text-muted small">No active manager is assigned.</div>
             @endforelse

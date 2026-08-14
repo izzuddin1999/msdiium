@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DocumentAttachment;
 use App\Models\DocumentHistory;
 use App\Models\PolicyDocument;
+use App\Models\Organization;
 use App\Models\TopicCategory;
 use App\Models\TopicSubtopic;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,6 +21,20 @@ class PublicPortalController extends Controller
         $viewer = $request->user();
         $requestedUnit = $request->route('unit') ?: $request->query('unit');
         $selectedUnit = in_array($requestedUnit, ['msd', 'kcdiom'], true) ? $requestedUnit : null;
+        $selectedOrganization = $request->filled('organization')
+            ? Organization::query()->where('is_active', true)->findOrFail((int) $request->query('organization'))
+            : null;
+
+        // Organization links are the primary public-navigation URLs. Preserve
+        // the legacy unit flag for the MSD/AIKOL presentation sections so the
+        // correct directory-specific content is rendered for those links.
+        if (! $selectedUnit && $selectedOrganization) {
+            $selectedUnit = match (strtoupper($selectedOrganization->code)) {
+                'MSD' => 'msd',
+                'KCDIOM' => 'kcdiom',
+                default => null,
+            };
+        }
 
         // Unit managers work in the governed repository, not in the public
         // presentation. The repository scopes itself to their assigned unit,
@@ -34,7 +49,9 @@ class PublicPortalController extends Controller
         $allEligible = $this->eligibleDocuments();
         $scopedEligible = clone $allEligible;
 
-        if ($selectedUnit) {
+        if ($selectedOrganization) {
+            $scopedEligible->where('public_documents.organization_id', $selectedOrganization->id);
+        } elseif ($selectedUnit) {
             $scopedEligible->where('public_documents.owner_unit', $selectedUnit);
         }
 
@@ -114,7 +131,12 @@ class PublicPortalController extends Controller
             'guidelines' => (clone $staffVisible)->where('document_type', 'guideline')->count(),
         ] : null;
 
-        $pageMeta = match ($selectedUnit) {
+        $pageMeta = $selectedOrganization ? [
+            'title' => $selectedOrganization->code.' Public Directory',
+            'eyebrow' => strtoupper($selectedOrganization->organization_type).' DIRECTORY',
+            'heading' => $selectedOrganization->name.' documents',
+            'description' => 'Browse current public documents issued by '.$selectedOrganization->name.'.',
+        ] : match ($selectedUnit) {
             'msd' => [
                 'title' => 'MSD Public Directory',
                 'eyebrow' => 'MANAGEMENT SERVICES DIVISION',
@@ -122,9 +144,9 @@ class PublicPortalController extends Controller
                 'description' => 'Browse current public documents issued by the Management Services Division.',
             ],
             'kcdiom' => [
-                'title' => 'KCDIOM Public Directory',
+                'title' => 'AIKOL Public Directory',
                 'eyebrow' => 'KULLIYYAH, CENTRES, DIVISIONS, INSTITUTES & OFFICES',
-                'heading' => 'KCDIOM policies, guidelines and circulars',
+                'heading' => 'AIKOL policies, guidelines and circulars',
                 'description' => 'Browse current public documents issued by IIUM Kulliyyah, Centres, Divisions, Institutes and Offices.',
             ],
             default => [
@@ -148,14 +170,22 @@ class PublicPortalController extends Controller
             'latestYear' => $years->first(),
             'categoryCount' => $categories->count(),
             'selectedUnit' => $selectedUnit,
+            'selectedOrganization' => $selectedOrganization,
             'pageMeta' => $pageMeta,
-            'unitCards' => collect([
-                ['code' => 'MSD', 'name' => 'Management Services Division', 'unit' => 'msd', 'icon' => 'account_balance'],
-                ['code' => 'OTHER UNITS', 'name' => 'Other Kulliyyah, Centres, Divisions, Institutes & Offices', 'unit' => 'kcdiom', 'icon' => 'domain'],
-            ])->map(function (array $unit) use ($unitCardDocuments, $unitCardTable): array {
-                $documents = (clone $unitCardDocuments)->where($unitCardTable.'.owner_unit', $unit['unit']);
+            'unitCards' => Organization::query()->where('is_active', true)->orderBy('name')->get()
+                ->map(function (Organization $organization) use ($unitCardDocuments, $unitCardTable): array {
+                $documents = (clone $unitCardDocuments)->where($unitCardTable.'.organization_id', $organization->id);
 
-                return $unit + [
+                return [
+                    'id' => $organization->id,
+                    'code' => strtoupper($organization->code === 'KCDIOM' ? 'AIKOL' : $organization->code),
+                    'name' => $organization->code === 'KCDIOM' ? 'Ahmad Ibrahim Kulliyyah of Laws' : $organization->name,
+                    'unit' => strtolower($organization->code) === 'msd' ? 'msd' : 'kcdiom',
+                    'icon' => match ($organization->organization_type) {
+                        'kulliyyah' => 'school', 'centre' => 'hub', 'division' => 'account_balance',
+                        'institute' => 'science', 'office' => 'business_center', default => 'domain',
+                    },
+                    'url' => route('public-portal', ['organization' => $organization->id]),
                     'documents' => (clone $documents)->count(),
                     'circulars' => (clone $documents)->where($unitCardTable.'.is_circular', true)->count(),
                     'latest' => (clone $documents)->latest($unitCardTable.'.published_at')->value('title'),

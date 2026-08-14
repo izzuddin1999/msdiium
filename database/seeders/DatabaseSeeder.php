@@ -68,7 +68,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'KCDIOM Liaison',
                 'staff_id' => 'KCD0001',
                 'cas_username' => 'kcdiom.liaison',
-                'role' => 'policy_manager',
+                'role' => 'kcdiom_liaison',
                 'unit' => 'kcdiom',
                 'is_active' => true,
                 'password' => 'Password123!',
