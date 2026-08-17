@@ -64,6 +64,17 @@
     .topic-browser-documents>.topic-browser-head{display:none!important}.topic-browser-documents .topic-document-list{margin-top:0!important}.topic-browser-layout{align-items:start}.topic-browser-documents .topic-document-row:first-child{margin-top:0}.policy-repository-head{margin-bottom:14px;padding-bottom:0!important}.topic-browser-nav{box-shadow:0 6px 18px rgba(31,42,55,.07)}.topic-document-row{border-color:#dce4e7!important;box-shadow:0 4px 13px rgba(31,42,55,.07)}
     .document-pagination{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:16px 0 4px;padding:14px 16px;border:1px solid #dce5e8;border-radius:10px;background:#fff;box-shadow:0 4px 12px rgba(31,42,55,.05)}.document-pagination-info{color:#667085;font-size:12px}.document-pagination-pages{display:flex;align-items:center;gap:6px}.document-page-link{display:grid;place-items:center;min-width:38px;height:38px;padding:0 10px;border:1px solid #d4dee2;border-radius:8px;background:#fff;color:#344054;font-size:12px;font-weight:750;text-decoration:none}.document-page-link:hover{border-color:#00958b;background:#eef9f7;color:#006d70;text-decoration:none}.document-page-link.active{border-color:#008f86;background:#008f86;color:#fff;box-shadow:0 4px 10px rgba(0,143,134,.2)}.document-page-link.disabled{color:#98a2b3;pointer-events:none}.document-page-ellipsis{padding:0 4px;color:#98a2b3}.policy-footer{display:none!important}@media(max-width:767px){.document-pagination{align-items:flex-start;flex-direction:column}.document-pagination-pages{max-width:100%;overflow-x:auto}.document-pagination-info{font-size:11px}}
     .topic-nav-category-link>a,.topic-nav-main>a{display:flex;align-items:center;gap:7px;color:inherit;text-decoration:none}.topic-nav-main>a{display:block}.topic-nav-category-link>a:hover,.topic-nav-main>a:hover{color:#008f86;text-decoration:none}
+
+    /* Softer typography: reserve bold weight for hierarchy and status cues. */
+    .topic-browser-head strong{font-weight:600}
+    .topic-nav-list>.topic-nav-link{font-weight:600}
+    .topic-nav-category-link{font-weight:600}
+    .topic-nav-main{font-weight:500}
+    .topic-nav-link{font-weight:400}
+    .topic-document-copy a{font-weight:600}
+    .topic-document-date{font-weight:500}
+    .topic-view-button,.topic-edit-button{font-weight:600}
+    .status-pill{font-weight:600}
     .policy-repository-head{justify-content:flex-end!important;padding:6px 0 14px!important}.policy-repository-head>.policy-repository-title{display:none!important}.policy-repository-head .policy-view-tools{margin-left:0}
     .topic-pdf-icon{overflow:hidden;padding:0!important;border-color:#cfe3df!important;background:linear-gradient(145deg,#e9f7f4,#dff1ed)!important;color:#007b75!important}.topic-pdf-icon .material-icons{font-size:25px}.topic-pdf-icon.type-circular-icon{border-color:#d6e3f5!important;background:linear-gradient(145deg,#edf5ff,#e2edfc)!important;color:#2367b1!important}.topic-pdf-icon.type-guideline-icon{border-color:#f0dfbd!important;background:linear-gradient(145deg,#fff8e9,#f8edd5)!important;color:#b56b08!important}
     /* Document overview and filters. */

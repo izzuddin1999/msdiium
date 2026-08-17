@@ -118,7 +118,7 @@
         <div class="col-12 form-section-title section-ownership"><h6>Ownership and access</h6><small>Identify responsibility and control the document’s visibility.</small></div>
         <div class="col-md-4">
             <label class="form-label">Permitted Users <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
-            <select name="access_scope" class="form-control" required>
+            <select name="access_scope" id="accessScope" class="form-control" required>
                 @foreach(['all', $managementUnit] as $scope)
                     <option value="{{ $scope }}" @selected(old('access_scope', $document->access_scope) === $scope)>{{ $scope === 'all' ? 'All permitted users' : strtoupper($scope).' permitted users' }}</option>
                 @endforeach
@@ -126,9 +126,20 @@
         </div>
         <div class="col-md-4 d-flex align-items-end">
             <div class="option-tile w-100"><div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_circular" value="1" id="isCircular" @checked(old('is_circular', $document->is_circular))>
+                <label class="form-check-label" for="isCircular">Set as circular</label>
+            </div></div>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="option-tile w-100"><div class="form-check">
                 <input class="form-check-input" type="checkbox" name="public_flag" value="1" id="publicFlag" @checked(old('public_flag', $document->public_flag))>
                 <label class="form-check-label" for="publicFlag">Show on public portal</label>
             </div></div>
+        </div>
+        <div class="col-12">
+            <div class="alert alert-light border mb-0 py-2 px-3" id="roleVisibilitySummary" aria-live="polite">
+                <small><strong>Visibility:</strong> <span data-visibility-text></span></small>
+            </div>
         </div>
 
         <div class="col-12 form-section-title section-content"><h6>Content, validity and controlled file</h6><small>Keep the searchable record, dates, remarks and source attachment current.</small></div>
@@ -343,6 +354,22 @@
 
         ['dragenter', 'dragover'].forEach((eventName) => pdfPicker?.addEventListener(eventName, () => pdfPicker.classList.add('is-dragging')));
         ['dragleave', 'drop'].forEach((eventName) => pdfPicker?.addEventListener(eventName, () => pdfPicker.classList.remove('is-dragging')));
+
+        const accessScope = document.getElementById('accessScope');
+        const publicFlag = document.getElementById('publicFlag');
+        const status = document.querySelector('[name="status"]');
+        const visibilityText = document.querySelector('[data-visibility-text]');
+        const updateVisibilitySummary = () => {
+            if (!visibilityText) return;
+            const allRoles = accessScope?.value === 'all';
+            const internal = allRoles
+                ? 'Visible to all active signed-in roles; hidden from inactive users'
+                : `Visible to system administrators and active ${accessScope?.value?.toUpperCase()} users; hidden from other-unit and inactive users`;
+            const isPublic = publicFlag?.checked && status?.value === 'published';
+            visibilityText.textContent = `${internal}. Public visitors: ${isPublic ? 'visible' : 'hidden'}.`;
+        };
+        [accessScope, publicFlag, status].forEach(control => control?.addEventListener('change', updateVisibilitySummary));
+        updateVisibilitySummary();
     })();
 </script>
 @endsection

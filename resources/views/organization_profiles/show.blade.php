@@ -11,7 +11,7 @@
 <div class="breadcrumb-flow"><a href="{{ route('dashboard') }}">Dashboard</a><span class="material-icons">chevron_right</span><span>Organization profile</span></div>
 @if(request()->user()?->isSystemAdmin())
     <form method="GET" action="{{ route('organization-profile.show') }}" class="org-card mb-3 p-3 d-flex flex-row align-items-end gap-3">
-        <div class="flex-grow-1"><label class="form-label fw-bold">Manage organization profile</label><select name="organization" class="form-control" onchange="this.form.submit()">@foreach($organizations as $organizationOption)<option value="{{ $organizationOption->id }}" @selected($selectedOrganization->id === $organizationOption->id)>{{ $organizationOption->code === 'KCDIOM' ? 'AIKOL' : $organizationOption->code }} â€” {{ $organizationOption->name }}</option>@endforeach</select></div>
+        <div class="flex-grow-1"><label class="form-label fw-bold">Manage organization profile</label><select name="organization" class="form-control" onchange="this.form.submit()">@foreach($organizations as $organizationOption)<option value="{{ $organizationOption->id }}" @selected($selectedOrganization->id === $organizationOption->id)>{{ $organizationOption->code === 'KCDIOM' ? 'AIKOL' : $organizationOption->code }} &mdash; {{ $organizationOption->name }}</option>@endforeach</select></div>
         <a href="{{ route('roles.index') }}" class="btn btn-outline-primary"><span class="material-icons align-middle me-1" style="font-size:18px">add_business</span>Add organization</a>
     </form>
 @endif

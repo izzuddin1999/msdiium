@@ -260,6 +260,7 @@ class PolicyDocumentController extends Controller
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
             'remarks' => ['nullable', 'string', 'max:2000'],
             'access_scope' => ['required', Rule::in(['all', $ownerUnit])],
+            'is_circular' => ['nullable', 'boolean'],
             'public_flag' => ['nullable', 'boolean'],
             'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
@@ -290,7 +291,7 @@ class PolicyDocumentController extends Controller
             $data['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
         }
 
-        $data['is_circular'] = $data['document_type'] === 'circular';
+        $data['is_circular'] = $request->boolean('is_circular');
         $data['public_flag'] = $request->boolean('public_flag');
         $data['version_number'] = 1;
         $data['published_at'] = $data['status'] === 'published' ? now() : null;
@@ -593,6 +594,7 @@ class PolicyDocumentController extends Controller
             'expiry_date' => ['nullable', 'date', 'after_or_equal:effective_date'],
             'remarks' => ['nullable', 'string', 'max:2000'],
             'access_scope' => ['required', Rule::in(['all', $ownerUnit])],
+            'is_circular' => ['nullable', 'boolean'],
             'public_flag' => ['nullable', 'boolean'],
             'status' => ['required', Rule::in($this->lookupCodes('DOCUMENT_STATUS', ['draft', 'published', 'inactive', 'superseded', 'archived']))],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:3072'],
@@ -614,7 +616,7 @@ class PolicyDocumentController extends Controller
             $data['file_original_name'] = $uploadedFiles[0]['file']->getClientOriginalName();
         }
 
-        $data['is_circular'] = $data['document_type'] === 'circular';
+        $data['is_circular'] = $request->boolean('is_circular');
         $data['public_flag'] = $request->boolean('public_flag');
         $data['updated_by'] = $viewer?->id;
         $data['published_at'] = $data['status'] === 'published' ? ($policyDocument->published_at ?? now()) : null;

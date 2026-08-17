@@ -180,7 +180,9 @@ class PolicyDocument extends Model
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
         if (! $user || ! $user->is_active) {
-            return $query->published()->where('access_scope', 'all');
+            return $query->published()
+                ->where('access_scope', 'all')
+                ->where('public_flag', true);
         }
 
         if ($user->canManagePolicies()) {
